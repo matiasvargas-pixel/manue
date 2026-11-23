@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Extintor · Nexbrig</title>
+<style>
+:root{--bg:#f3f1ee;--card:#fff;--ink:#1d1a19;--mut:#6f6762;--line:#e0dbd6;--red:#b3261e;--ok:#1f7a45;--warn:#b26a00;--bad:#b3261e}
+@media(prefers-color-scheme:dark){:root{--bg:#161413;--card:#201d1c;--ink:#f1ece8;--mut:#a39b95;--line:#3a3532;--red:#ef6a5f;--ok:#4cc180;--warn:#f0a63a;--bad:#ff7a70}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,sans-serif;padding-top:env(safe-area-inset-top,0)}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border-bottom:4px solid var(--red)}
+header img{height:76px;max-width:60%;object-fit:contain;border-radius:4px}
+header span{font-weight:600;letter-spacing:.2px}
+main{max-width:640px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom,0))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+h1{margin:0 0 2px;font-size:1.5rem;line-height:1.2}
+.id{color:var(--mut);font-size:.9rem}
+.est{display:inline-block;margin-top:12px;padding:6px 12px;border-radius:6px;font-weight:600;color:#fff}
+.est.ok{background:var(--ok)}.est.warn{background:var(--warn)}.est.bad{background:var(--bad)}.est.sin{background:var(--mut)}
+dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:8px 16px}
+dt{color:var(--mut)}dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+h2{font-size:1.05rem;margin:0 0 10px}
+.map img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:6px;background:#fff}
+a.item{display:block;color:inherit;text-decoration:none;padding:10px 0;border-bottom:1px solid var(--line)}
+a.item:last-child{border:0}a.item small{display:block;color:var(--mut)}
+input{width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit;margin-bottom:8px}
+footer{text-align:center;color:var(--mut);font-size:.85rem;padding:8px}
+a:focus-visible,input:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+</style>
+</head>
+<body>
+<header><img src="https://nexbrig.com/img/novologo.jpeg" alt="Nexbrig"><span>Control de extintores</span></header>
+<main id="app"><p>Cargando información…</p></main>
+<footer>Nexbrig · <a href="https://nexbrig.com" style="color:inherit">nexbrig.com</a></footer>
+<script>
+/* ===== CONFIGURACIÓN: cambia USUARIO y REPO por los de tu repo público de JSON ===== */
+const DATA_URL = "https://raw.githubusercontent.com/USUARIO/REPO-JSON/main/data/extintores.json";
+/* ================================================================================== */
+
+const app = document.getElementById("app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fd = d => d ? new Date(d + "T00:00:00").toLocaleDateString("es-PE", {day:"numeric", month:"long", year:"numeric"}) : "";
+
+// Duración legible: "12 d 5 h", "5 h 20 min" o "20 min"
+function dur(ms){
+  const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
+  return d > 0 ? d + " d " + h + " h" : h > 0 ? h + " h " + m + " min" : Math.max(m, 1) + " min";
+}
+// Compara con la fecha y hora actuales del dispositivo.
+// Sin hora indicada, el extintor vence al terminar ese día (23:59:59).
+function estado(v, hora){
+  if(!v) return ["sin", "Sin fecha de vencimiento"];
+  const ms = new Date(v + "T" + (hora || "23:59:59")) - Date.now();
+  if(isNaN(ms)) return ["sin", "Fecha de vencimiento no válida"];
+  if(ms < 0) return ["bad", "Vencido hace " + dur(-ms)];
+  if(ms <= 30 * 864e5) return ["warn", "Por vencer: faltan " + dur(ms)];
+  return ["ok", "Vigente · faltan " + dur(ms)];
+}
+
+function vistaExtintor(e){
+  const [cls, txt] = estado(e.vencimiento, e.horaVenc);
+  const filas = [
+    ["Tipo", e.tipo], ["Capacidad", e.capacidad], ["Marca", e.marca], ["N° de serie", e.serie],
+    ["Ubicación", e.ubicacion], ["Fabricación", fd(e.fabricacion)], ["Última recarga", fd(e.recarga)],
+    ["Vencimiento", e.vencimiento ? fd(e.vencimiento) + (e.horaVenc ? ", " + e.horaVenc : "") : ""], ["Responsable", e.responsable], ["Observaciones", e.notas],
+    ["Actualizado", fd(e.actualizado)]
+  ].filter(r => r[1]);
+  let h = `<div class="card"><h1>${esc(e.nombre || e.id)}</h1><div class="id">Código ${esc(e.id)}</div>
+    <div class="est ${cls}" id="est">${esc(txt)}</div></div>
+    <div class="card"><dl>${filas.map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl></div>`;
+  if(e.mapa && e.mapa.includes("<svg")){
+    // Se muestra como imagen: así un SVG nunca puede ejecutar scripts.
+    const src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(e.mapa);
+    h += `<div class="card map"><h2>Mapa de ubicación</h2><img src="${src}" alt="Mapa de ubicación del extintor ${esc(e.id)}"></div>`;
+  }
+  return h;
+}
+
+function vistaLista(db){
+  app.innerHTML = `<div class="card"><h2>Extintores registrados</h2>
+    <input id="q" type="search" placeholder="Buscar por código, nombre o ubicación">
+    <div id="lista"></div></div>`;
+  const pintar = () => {
+    const q = document.getElementById("q").value.toLowerCase();
+    const r = db.extintores.filter(e => (e.id + " " + e.nombre + " " + e.ubicacion).toLowerCase().includes(q));
+    document.getElementById("lista").innerHTML = r.map(e =>
+      `<a class="item" href="?id=${encodeURIComponent(e.id)}"><b>${esc(e.id)}</b> · ${esc(e.nombre)}<small>${esc(e.ubicacion)}</small></a>`
+    ).join("") || "<p>No hay resultados.</p>";
+  };
+  document.getElementById("q").oninput = pintar; pintar();
+}
+
+(async () => {
+  try{
+    const r = await fetch(DATA_URL + "?t=" + Date.now(), {cache: "no-store"});
+    if(!r.ok) throw new Error(r.status);
+    const db = await r.json();
+    const id = new URLSearchParams(location.search).get("id");
+    if(!id) return vistaLista(db);
+    const e = (db.extintores || []).find(x => x.id === id);
+    if(!e){ app.innerHTML = `<div class="card"><h1>Extintor no encontrado</h1><p>El código <b>${esc(id)}</b> no existe. <a href="./">Ver todos</a></p></div>`; return; }
+    document.title = e.id + " · Nexbrig";
+    app.innerHTML = vistaExtintor(e);
+    // Reevalúa el estado con el reloj del dispositivo mientras la página siga abierta.
+    setInterval(() => {
+      const [c, t] = estado(e.vencimiento, e.horaVenc), el = document.getElementById("est");
+      el.className = "est " + c; el.textContent = t;
+    }, 30000);
+  }catch(err){
+    app.innerHTML = `<div class="card"><h1>No se pudo cargar la información</h1><p>Revisa tu conexión e inténtalo de nuevo en unos segundos.</p></div>`;
+  }
+})();
+</script>
+</body>
+</html>
