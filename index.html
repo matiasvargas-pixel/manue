@@ -228,7 +228,13 @@ function panel(){
   $("#g3").onclick = () => { try{ localStorage.removeItem("nb_cfg"); }catch(e){} location.reload(); };
   $("#g4").onclick = () => { dlg.oninput = null; dlg.close(); };
 }
-$("#cfgBtn").onclick = abrirPanel;
+/* Hay que pulsar el puntito 10 veces seguidas (con menos de 3 s entre toques) para abrir el acceso */
+let toques = 0, tToques;
+$("#cfgBtn").onclick = () => {
+  clearTimeout(tToques);
+  if(++toques >= 10){ toques = 0; abrirPanel(); return; }
+  tToques = setTimeout(() => toques = 0, 3000);
+};
 
 /* ---------- Arranque ---------- */
 const noEnc = (t, m) => app.innerHTML = `<div class="card"><h1>${esc(t)}</h1><p>${m || ""}</p></div>`;
