@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Extintor · Nexbrig</title>
+<title>Extintor · NEXBRIG</title>
 <style>
 :root{--bg:#f3f1ee;--card:#fff;--ink:#1d1a19;--mut:#6f6762;--line:#e0dbd6;--red:#b3261e;--ok:#1f7a45;--warn:#b26a00;--bad:#b3261e}
 @media(prefers-color-scheme:dark){:root{--bg:#161413;--card:#201d1c;--ink:#f1ece8;--mut:#a39b95;--line:#3a3532;--red:#ef6a5f;--ok:#4cc180;--warn:#f0a63a;--bad:#ff7a70}}
@@ -15,40 +15,67 @@ header span{font-weight:600;letter-spacing:.2px}
 main{max-width:640px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom,0))}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
 h1{margin:0 0 2px;font-size:1.5rem;line-height:1.2}
-.id{color:var(--mut);font-size:.9rem}
+.id,.hint{color:var(--mut);font-size:.9rem}
 .est{display:inline-block;margin-top:12px;padding:6px 12px;border-radius:6px;font-weight:600;color:#fff}
 .est.ok{background:var(--ok)}.est.warn{background:var(--warn)}.est.bad{background:var(--bad)}.est.sin{background:var(--mut)}
 dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:8px 16px}
 dt{color:var(--mut)}dd{margin:0;font-weight:500;overflow-wrap:anywhere}
 h2{font-size:1.05rem;margin:0 0 10px}
-.map img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:6px;background:#fff}
+.mp{position:relative}
+.mp img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:6px;background:#fff}
+.dot{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--red);border:3px solid #fff;box-shadow:0 0 0 2px var(--red)}
 a.item{display:block;color:inherit;text-decoration:none;padding:10px 0;border-bottom:1px solid var(--line)}
 a.item:last-child{border:0}a.item small{display:block;color:var(--mut)}
-input{width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit;margin-bottom:8px}
-footer{text-align:center;color:var(--mut);font-size:.85rem;padding:8px}
-a:focus-visible,input:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit;margin-bottom:8px}
+footer{display:flex;justify-content:center;align-items:center;color:var(--mut);font-size:.85rem;padding:8px}
+a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.pdf{width:100%;padding:12px;margin-bottom:10px;border:0;border-radius:8px;background:var(--red);color:#fff;font:600 1rem inherit;font-family:inherit;cursor:pointer}
+.pdf:disabled{opacity:.6;cursor:wait}
+.pdf:focus-visible,.acts button:focus-visible,.oculto:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.oculto{background:none;border:0;color:inherit;opacity:.75;cursor:pointer;padding:0 4px;font-size:2rem;line-height:1}
+.oculto:hover,.oculto:focus-visible{opacity:.8}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);padding:16px;width:min(92vw,440px)}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+dialog label{display:block;font-weight:600;margin:8px 0 3px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.acts button{flex:1;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.acts .p{background:var(--red);color:#fff;border-color:var(--red)}
 </style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
-<header><img src="https://nexbrig.com/img/novologo.jpeg" alt="Nexbrig"><span>Control de extintores</span></header>
+<header><img id="logo" alt="Logo"><span id="hn">Control de extintores</span></header>
 <main id="app"><p>Cargando información…</p></main>
-<footer>Nexbrig · <a href="https://nexbrig.com" style="color:inherit">nexbrig.com</a></footer>
+<footer><button id="cfgBtn" class="oculto" aria-label="Configuración" title="Configuración">·</button><span>Servicio por <a href="https://nexbrig.com" style="color:inherit">NEXBRIG</a></span></footer>
+<dialog id="dlg"></dialog>
 <script>
-/* ===== CONFIGURACIÓN: cambia USUARIO y REPO por los de tu repo público de JSON ===== */
-const DATA_URL = "https://raw.githubusercontent.com/matiasvargas-pixel/2manue/refs/heads/main/data/extintores.json";
-/* ================================================================================== */
+/* Valores por defecto. Para cambiarlos NO hace falta editar este código:
+   usa el botón oculto «·» del pie de página (pide contraseña) y genera un config.json. */
+const DEF = {usuario:"matiasvargas-pixel", repo:"2manue", rama:"main", carpeta:"data", fuente:"raw", logo:"https://nexbrig.com/img/novologo.jpeg"};
+const HASH = "ab9f273897be0befedd52dce825cd30810a22f61654d00581f59e20abadbe12b"; // SHA-256 de la contraseña
 
-const app = document.getElementById("app");
+const $ = s => document.querySelector(s), app = $("#app");
+let CFG = {...DEF}, DB = null, EMP = {}, E = "";
+const base = (c = CFG) => c.fuente === "pages"
+  ? `https://${c.usuario}.github.io/${c.repo}/${c.carpeta}/`
+  : `https://raw.githubusercontent.com/${c.usuario}/${c.repo}/${c.rama}/${c.carpeta}/`;
+const ruta = p => base() + encodeURIComponent(E) + "/" + p.split("/").map(encodeURIComponent).join("/");
+const getJson = async u => { const r = await fetch(u + "?t=" + Date.now(), {cache: "no-store"}); if(!r.ok) throw new Error(r.status); return r.json(); };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fd = d => d ? new Date(d + "T00:00:00").toLocaleDateString("es-PE", {day:"numeric", month:"long", year:"numeric"}) : "";
+const enlace = id => "?e=" + encodeURIComponent(E) + (id ? "&id=" + encodeURIComponent(id) : "");
 
-// Duración legible: "12 d 5 h", "5 h 20 min" o "20 min"
+function fh(h){ // "14:30" -> "2:30 PM"
+  if(!h) return "";
+  const [H, M] = h.split(":").map(Number);
+  return (H % 12 || 12) + ":" + String(M).padStart(2, "0") + " " + (H < 12 ? "AM" : "PM");
+}
 function dur(ms){
   const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
   return d > 0 ? d + " d " + h + " h" : h > 0 ? h + " h " + m + " min" : Math.max(m, 1) + " min";
 }
-// Compara con la fecha y hora actuales del dispositivo.
-// Sin hora indicada, el extintor vence al terminar ese día (23:59:59).
+// Compara con la fecha y hora del dispositivo. Sin hora, vence al terminar ese día (23:59:59).
 function estado(v, hora){
   if(!v) return ["sin", "Sin fecha de vencimiento"];
   const ms = new Date(v + "T" + (hora || "23:59:59")) - Date.now();
@@ -63,52 +90,170 @@ function vistaExtintor(e){
   const filas = [
     ["Tipo", e.tipo], ["Capacidad", e.capacidad], ["Marca", e.marca], ["N° de serie", e.serie],
     ["Ubicación", e.ubicacion], ["Fabricación", fd(e.fabricacion)], ["Última recarga", fd(e.recarga)],
-    ["Vencimiento", e.vencimiento ? fd(e.vencimiento) + (e.horaVenc ? ", " + e.horaVenc : "") : ""], ["Responsable", e.responsable], ["Observaciones", e.notas],
-    ["Actualizado", fd(e.actualizado)]
+    ["Vencimiento", e.vencimiento ? fd(e.vencimiento) + (e.horaVenc ? ", " + fh(e.horaVenc) : "") : ""],
+    ["Responsable", e.responsable], ["Observaciones", e.notas], ["Actualizado", fd(e.actualizado)]
   ].filter(r => r[1]);
   let h = `<div class="card"><h1>${esc(e.nombre || e.id)}</h1><div class="id">Código ${esc(e.id)}</div>
     <div class="est ${cls}" id="est">${esc(txt)}</div></div>
     <div class="card"><dl>${filas.map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl></div>`;
-  if(e.mapa && e.mapa.includes("<svg")){
-    // Se muestra como imagen: así un SVG nunca puede ejecutar scripts.
-    const src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(e.mapa);
-    h += `<div class="card map"><h2>Mapa de ubicación</h2><img src="${src}" alt="Mapa de ubicación del extintor ${esc(e.id)}"></div>`;
+  // El mapa es un archivo SVG de la carpeta de la empresa; se muestra como imagen (no ejecuta scripts).
+  if(e.mapa && /^[\w\-./]+\.svg$/i.test(e.mapa) && !e.mapa.includes("..")){
+    const punto = e.mapaX != null && e.mapaY != null && e.mapaX !== "" && e.mapaY !== "";
+    h += `<div class="card"><h2>Mapa de ubicación</h2><div class="mp"><img src="${esc(ruta(e.mapa))}" alt="Mapa de ubicación del extintor ${esc(e.id)}">
+      ${punto ? `<i class="dot" style="left:${+e.mapaX}%;top:${+e.mapaY}%"></i>` : ""}</div>
+      ${punto ? '<p class="hint">El punto rojo indica dónde está el extintor.</p>' : ""}</div>`;
   }
-  return h;
+  return h + `<div class="card"><button class="pdf" onclick="generarPDF(this)">Descargar informe PDF de todos los extintores</button>
+    <a class="item" href="${enlace()}">Ver todos los extintores</a></div>`;
 }
 
 function vistaLista(db){
   app.innerHTML = `<div class="card"><h2>Extintores registrados</h2>
-    <input id="q" type="search" placeholder="Buscar por código, nombre o ubicación">
-    <div id="lista"></div></div>`;
+    <button class="pdf" onclick="generarPDF(this)">Descargar informe PDF</button>
+    <input id="q" type="search" placeholder="Buscar por código, nombre o ubicación"><div id="lista"></div></div>`;
   const pintar = () => {
-    const q = document.getElementById("q").value.toLowerCase();
+    const q = $("#q").value.toLowerCase();
     const r = db.extintores.filter(e => (e.id + " " + e.nombre + " " + e.ubicacion).toLowerCase().includes(q));
-    document.getElementById("lista").innerHTML = r.map(e =>
-      `<a class="item" href="?id=${encodeURIComponent(e.id)}"><b>${esc(e.id)}</b> · ${esc(e.nombre)}<small>${esc(e.ubicacion)}</small></a>`
-    ).join("") || "<p>No hay resultados.</p>";
+    $("#lista").innerHTML = r.map(e =>
+      `<a class="item" href="${enlace(e.id)}"><b>${esc(e.id)}</b> · ${esc(e.nombre)}<small>${esc(e.ubicacion)}</small></a>`).join("") || "<p>No hay resultados.</p>";
   };
-  document.getElementById("q").oninput = pintar; pintar();
+  $("#q").oninput = pintar; pintar();
 }
 
-(async () => {
+/* ---------- Informe PDF ---------- */
+function logoData(urls){
+  const probar = u => new Promise(res => {
+    const i = new Image(); i.crossOrigin = "anonymous";
+    i.onload = () => { try{
+      const c = document.createElement("canvas"); c.width = i.naturalWidth; c.height = i.naturalHeight;
+      const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(i, 0, 0);
+      res({url: c.toDataURL("image/jpeg", .92), w: i.naturalWidth, h: i.naturalHeight});
+    }catch(e){ res(null); } };
+    i.onerror = () => res(null); i.src = u;
+  });
+  return urls.filter(Boolean).reduce((p, u) => p.then(r => r || probar(u)), Promise.resolve(null));
+}
+
+async function generarPDF(btn){
+  if(!window.jspdf || !DB) return alert("No se pudo cargar el generador de PDF. Revisa tu conexión e inténtalo de nuevo.");
+  const txtBtn = btn.textContent; btn.disabled = true; btn.textContent = "Generando informe…";
   try{
-    const r = await fetch(DATA_URL + "?t=" + Date.now(), {cache: "no-store"});
-    if(!r.ok) throw new Error(r.status);
-    const db = await r.json();
-    const id = new URLSearchParams(location.search).get("id");
+    const doc = new window.jspdf.jsPDF({orientation: "landscape", unit: "mm", format: "a4"});
+    const W = doc.internal.pageSize.getWidth(), now = new Date(), p = n => String(n).padStart(2, "0");
+    const fecha = now.toLocaleDateString("es-PE", {day: "numeric", month: "long", year: "numeric"});
+    const hora = fh(p(now.getHours()) + ":" + p(now.getMinutes()));
+    const lg = await logoData([EMP.logo, CFG.logo]);
+    if(lg){ let h = 20, w = h * lg.w / lg.h; if(w > 60){ w = 60; h = w * lg.h / lg.w; } doc.addImage(lg.url, "JPEG", 14, 10, w, h); }
+    doc.setTextColor(29, 26, 25); doc.setFont("helvetica", "bold"); doc.setFontSize(18);
+    doc.text("Informe de estado de extintores", W - 14, 17, {align: "right"});
+    doc.setFontSize(12); doc.text(EMP.nombre || "", W - 14, 24, {align: "right"});
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(90);
+    doc.text("Generado el " + fecha + ", " + hora, W - 14, 30, {align: "right"});
+    doc.setDrawColor(179, 38, 30); doc.setLineWidth(0.8); doc.line(14, 36, W - 14, 36);
+
+    const orden = {bad: 0, warn: 1, sin: 2, ok: 3};
+    const filas = DB.extintores.map(e => {
+      const [c, t] = estado(e.vencimiento, e.horaVenc);
+      return {c, row: [e.id, e.nombre || "", e.tipo || "", e.capacidad || "", e.ubicacion || "",
+        e.vencimiento ? fd(e.vencimiento) + (e.horaVenc ? ", " + fh(e.horaVenc) : "") : "—", t]};
+    }).sort((a, b) => orden[a.c] - orden[b.c]);
+    const n = k => filas.filter(f => f.c === k).length;
+    doc.setFontSize(11); doc.setTextColor(29, 26, 25);
+    doc.text("Total: " + filas.length + "   |   Vigentes: " + n("ok") + "   |   Por vencer: " + n("warn") +
+      "   |   Vencidos: " + n("bad") + (n("sin") ? "   |   Sin fecha: " + n("sin") : ""), 14, 43);
+
+    const color = {ok: [31, 122, 69], warn: [178, 106, 0], bad: [179, 38, 30], sin: [111, 103, 98]};
+    doc.autoTable({
+      startY: 48,
+      head: [["Código", "Nombre", "Tipo", "Capacidad", "Ubicación", "Vencimiento", "Estado"]],
+      body: filas.map(f => f.row),
+      styles: {fontSize: 9, cellPadding: 2.5},
+      headStyles: {fillColor: [179, 38, 30], textColor: 255},
+      alternateRowStyles: {fillColor: [247, 245, 243]},
+      didParseCell: d => {
+        if(d.section === "body" && d.column.index === 6){
+          d.cell.styles.fillColor = color[filas[d.row.index].c]; d.cell.styles.textColor = 255; d.cell.styles.fontStyle = "bold";
+        }
+      }
+    });
+    const pags = doc.internal.getNumberOfPages(), H = doc.internal.pageSize.getHeight();
+    for(let i = 1; i <= pags; i++){
+      doc.setPage(i); doc.setFontSize(8); doc.setTextColor(120);
+      doc.text("Servicio por NEXBRIG · nexbrig.com", 14, H - 8);
+      doc.text("Página " + i + " de " + pags, W - 14, H - 8, {align: "right"});
+    }
+    doc.save("Informe-extintores-" + E + "-" + now.getFullYear() + "-" + p(now.getMonth() + 1) + "-" + p(now.getDate()) + ".pdf");
+  }catch(err){
+    alert("No se pudo generar el PDF.");
+  }finally{
+    btn.disabled = false; btn.textContent = txtBtn;
+  }
+}
+
+/* ---------- Panel de configuración oculto (con contraseña) ---------- */
+const dlg = $("#dlg");
+const sha = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(x => x.toString(16).padStart(2, "0")).join("");
+
+function abrirPanel(){
+  dlg.innerHTML = `<h2>Acceso</h2><label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="off">
+    <p class="hint" id="msg" role="alert"></p>
+    <div class="acts"><button id="no">Cancelar</button><button class="p" id="ok">Entrar</button></div>`;
+  dlg.showModal(); $("#pw").focus();
+  $("#no").onclick = () => dlg.close();
+  const entrar = async () => {
+    if(!(window.crypto && crypto.subtle)) return $("#msg").textContent = "Abre la página con https para usar este panel.";
+    if(await sha($("#pw").value) === HASH) panel(); else { $("#msg").textContent = "Contraseña incorrecta."; $("#pw").select(); }
+  };
+  $("#ok").onclick = entrar; $("#pw").onkeydown = ev => { if(ev.key === "Enter") entrar(); };
+}
+
+function panel(){
+  const CAMPOS = [["usuario", "Usuario de GitHub"], ["repo", "Repositorio público de datos"], ["rama", "Rama"], ["carpeta", "Carpeta de datos"], ["logo", "Logo por defecto (URL)"]];
+  dlg.innerHTML = `<h2>Configuración</h2>` +
+    CAMPOS.map(([k, l]) => `<label>${l}<input data-k="${k}" value="${esc(CFG[k])}"></label>`).join("") +
+    `<label>Fuente de datos<select data-k="fuente"><option value="pages">GitHub Pages (recomendado)</option><option value="raw">raw.githubusercontent.com</option></select></label>
+    <p class="hint" id="cu"></p>
+    <p class="hint">«Guardar aquí» solo aplica en este navegador (para probar). Para que aplique a todos, descarga <b>config.json</b> y súbelo junto a index.html.</p>
+    <div class="acts"><button class="p" id="g1">Guardar aquí</button><button id="g2">Descargar config.json</button></div>
+    <div class="acts"><button id="g3">Restablecer</button><button id="g4">Cerrar</button></div>`;
+  dlg.querySelector("[data-k=fuente]").value = CFG.fuente;
+  const leer = () => { const o = {}; dlg.querySelectorAll("[data-k]").forEach(i => o[i.dataset.k] = i.value.trim()); return o; };
+  const url = () => $("#cu").textContent = "Datos en: " + base({...CFG, ...leer()}) + "<empresa>/";
+  dlg.oninput = url; url();
+  $("#g1").onclick = () => { try{ localStorage.setItem("nb_cfg", JSON.stringify(leer())); }catch(e){} location.reload(); };
+  $("#g2").onclick = () => {
+    const a = document.createElement("a"); a.download = "config.json";
+    a.href = URL.createObjectURL(new Blob([JSON.stringify({...CFG, ...leer()}, null, 2)], {type: "application/json"})); a.click();
+  };
+  $("#g3").onclick = () => { try{ localStorage.removeItem("nb_cfg"); }catch(e){} location.reload(); };
+  $("#g4").onclick = () => { dlg.oninput = null; dlg.close(); };
+}
+$("#cfgBtn").onclick = abrirPanel;
+
+/* ---------- Arranque ---------- */
+const noEnc = (t, m) => app.innerHTML = `<div class="card"><h1>${esc(t)}</h1><p>${m || ""}</p></div>`;
+(async () => {
+  try{ Object.assign(CFG, await getJson("config.json")); }catch(e){}       // config.json junto al index.html (opcional)
+  try{ Object.assign(CFG, JSON.parse(localStorage.getItem("nb_cfg") || "{}")); }catch(e){} // prueba local
+  $("#logo").src = CFG.logo;
+  const q = new URLSearchParams(location.search); E = q.get("e") || ""; const id = q.get("id");
+  if(!E) return noEnc("Control de extintores", "Escanea el código QR de un extintor para ver su información.");
+  if(!/^[a-z0-9-]{3,60}$/i.test(E)) return noEnc("Empresa no encontrada");
+  try{
+    const [emp, db] = await Promise.all([getJson(ruta("empresa.json")).catch(() => ({})), getJson(ruta("extintores.json"))]);
+    EMP = emp; DB = db;
+    if(emp.logo) $("#logo").src = emp.logo;
+    if(emp.nombre){ $("#hn").textContent = emp.nombre; document.title = emp.nombre + " · Extintores"; }
     if(!id) return vistaLista(db);
     const e = (db.extintores || []).find(x => x.id === id);
-    if(!e){ app.innerHTML = `<div class="card"><h1>Extintor no encontrado</h1><p>El código <b>${esc(id)}</b> no existe. <a href="./">Ver todos</a></p></div>`; return; }
-    document.title = e.id + " · Nexbrig";
+    if(!e) return noEnc("Extintor no encontrado", `El código <b>${esc(id)}</b> no existe. <a href="${enlace()}">Ver todos</a>`);
     app.innerHTML = vistaExtintor(e);
-    // Reevalúa el estado con el reloj del dispositivo mientras la página siga abierta.
-    setInterval(() => {
-      const [c, t] = estado(e.vencimiento, e.horaVenc), el = document.getElementById("est");
+    setInterval(() => { // reevalúa el estado con el reloj del dispositivo
+      const [c, t] = estado(e.vencimiento, e.horaVenc), el = $("#est");
       el.className = "est " + c; el.textContent = t;
     }, 30000);
   }catch(err){
-    app.innerHTML = `<div class="card"><h1>No se pudo cargar la información</h1><p>Revisa tu conexión e inténtalo de nuevo en unos segundos.</p></div>`;
+    noEnc("No se pudo cargar la información", "Revisa el enlace del QR o tu conexión e inténtalo de nuevo en unos segundos.");
   }
 })();
 </script>
