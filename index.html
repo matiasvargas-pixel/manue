@@ -9,10 +9,10 @@
 @media(prefers-color-scheme:dark){:root{--bg:#161413;--card:#201d1c;--ink:#f1ece8;--mut:#a39b95;--line:#3a3532;--red:#ef6a5f;--ok:#4cc180;--warn:#f0a63a;--bad:#ff7a70}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,sans-serif;padding-top:env(safe-area-inset-top,0)}
-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border-bottom:4px solid var(--red)}
-header img{height:76px;max-width:60%;object-fit:contain;border-radius:4px}
-header span{font-weight:600;letter-spacing:.2px}
-main{max-width:640px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom,0))}
+header{--lw:min(150px,26vw);display:grid;grid-template-columns:var(--lw) 1fr var(--lw);align-items:center;gap:8px;padding:12px 16px;background:var(--card);border-bottom:4px solid var(--red)}
+header img{width:var(--lw);height:76px;padding:6px;object-fit:contain;object-position:center;background:#fff;border-radius:8px}
+header span{min-width:0;text-align:center;font-size:clamp(1rem,3.6vw,1.6rem);font-weight:700;line-height:1.2;letter-spacing:.2px;overflow-wrap:anywhere}
+main{transition:max-width .3s ease;max-width:640px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom,0))}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
 h1{margin:0 0 2px;font-size:1.5rem;line-height:1.2}
 .id,.hint{color:var(--mut);font-size:.9rem}
@@ -40,6 +40,7 @@ dialog label{display:block;font-weight:600;margin:8px 0 3px}
 .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .acts button,.acts a{flex:1;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer;text-align:center;text-decoration:none}
 .acts .p{background:var(--red);color:#fff;border-color:var(--red)}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.28s}
 /* Navegación Extintores / Planos */
 .nav{display:flex;gap:6px;margin-bottom:14px}
 .nav a{flex:1;text-align:center;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);text-decoration:none;font-weight:600}
@@ -70,6 +71,7 @@ main.ancho{max-width:1100px}
 .pv.fs .zw{flex:1;max-height:none}
 .zw{overflow:auto;border:1px solid var(--line);border-radius:8px;background:#fff;overscroll-behavior:contain}
 .zw.z{max-height:72vh;cursor:grab}.zw.g{cursor:grabbing;user-select:none}
+.zw .mp{margin:0 auto}
 .zw .mp img{border:0;border-radius:0;-webkit-user-drag:none;user-select:none}
 .pside{display:flex;flex-direction:column;gap:10px;min-width:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -234,7 +236,7 @@ function pintarPlano(anim = true){
   $("#pl").innerHTML = `<div class="ph"><div><h2>${esc(nombrePlano(p))}</h2>
       <p class="hint">${PL.length > 1 ? `Plano ${PI + 1} de ${PL.length} · ` : ""}${con.length} extintor${con.length === 1 ? "" : "es"} marcado${con.length === 1 ? "" : "s"}. Toca un punto para ver sus datos.</p></div></div>
     <div class="pg"><div class="pv" id="pv">
-      <div class="zb" role="group" aria-label="Controles del plano"><button data-z="-" aria-label="Alejar">−</button><output id="zl" aria-live="polite">100%</output><button data-z="+" aria-label="Acercar">+</button><button data-z="0">Ajustar</button><button data-fs aria-label="Pantalla completa" title="Pantalla completa">⛶</button></div>
+      <div class="zb" role="group" aria-label="Controles del plano"><button data-z="-" aria-label="Alejar">−</button><output id="zl" aria-live="polite">100%</output><button data-z="+" aria-label="Acercar">+</button><button data-z="0">Restablecer</button><button data-fs aria-label="Pantalla completa" title="Pantalla completa">⛶</button></div>
       <div class="zw" id="zw"><div class="mp" id="mp" style="width:100%"><img src="${esc(ruta(p))}" alt="Plano ${esc(nombrePlano(p))}" draggable="false">
         ${con.map(x => `<button class="pin ${x.c[0]}" style="left:${+x.e.mapaX}%;top:${+x.e.mapaY}%" data-id="${esc(x.e.id)}" data-c="${x.c[0]}" title="${esc(x.e.id + " · " + x.c[1])}" aria-label="${esc("Extintor " + x.e.id + ": " + (x.e.nombre || "") + ". " + x.c[1])}"></button>`).join("")}
       </div></div><p class="ley">Doble clic o Ctrl + rueda para acercar. Arrastra para mover el plano.</p></div>
@@ -254,7 +256,7 @@ function cambiarPlano(i){
 
 function zoom(v, ox, oy){
   const zw = $("#zw"), mp = $("#mp"), a = zoomActual();
-  v = Math.max(100, Math.min(500, Math.round(v)));
+  v = Math.max(25, Math.min(500, Math.round(v)));
   ox = ox ?? zw.clientWidth / 2; oy = oy ?? zw.clientHeight / 2;
   const k = v / a;
   mp.style.width = v + "%";
@@ -275,11 +277,27 @@ function elegir(id){ // resalta el extintor en el plano y en la lista; con el se
   if(zw.scrollHeight <= zw.clientHeight) $("#pv").scrollIntoView({block: "nearest", behavior: "smooth"});
 }
 
+function navegar(vista, push = true){
+  if(push) history.pushState(null, "", vista === "planos" ? enlacePlanos() : enlace());
+  const pintar = () => { document.body.style.overflow = ""; vista === "planos" ? vistaPlanos(DB) : vistaLista(DB); window.scrollTo(0, 0); };
+  if(document.startViewTransition && !matchMedia("(prefers-reduced-motion:reduce)").matches) document.startViewTransition(pintar);
+  else{ pintar(); app.animate([{opacity: 0, transform: "translateY(8px)"}, {opacity: 1, transform: "none"}], {duration: 250, easing: "ease-out"}); }
+}
+window.addEventListener("popstate", () => { // botón Atrás / Adelante del navegador
+  if(!DB) return; const q = new URLSearchParams(location.search);
+  if(q.get("id")) return location.reload();
+  navegar(q.get("vista") === "planos" ? "planos" : "lista", false);
+});
+
 // Un solo manejador para pestañas, zoom, filtros, lista y puntos
 app.addEventListener("click", ev => {
+  const nv = ev.target.closest(".nav a"); // Extintores / Planos sin recargar la página
+  if(nv && DB && !ev.metaKey && !ev.ctrlKey && !ev.shiftKey && ev.button === 0){
+    ev.preventDefault(); if(!nv.classList.contains("on")) navegar(nv.getAttribute("href").includes("vista=planos") ? "planos" : "lista"); return;
+  }
   const t = ev.target, tab = t.closest("[data-p]"), z = t.closest("[data-z]"), f = t.closest("[data-f]");
   if(tab) return cambiarPlano(+tab.dataset.p);
-  if(z) return zoom(z.dataset.z === "0" ? 100 : zoomActual() + (z.dataset.z === "+" ? 50 : -50));
+  if(z) return zoom(z.dataset.z === "0" ? 100 : zoomActual() + (z.dataset.z === "+" ? (zoomActual() >= 100 ? 50 : 25) : (zoomActual() > 100 ? -50 : -25)));
   if(t.closest("[data-fs]")){ const pv = $("#pv"), on = pv.classList.toggle("fs"); document.body.style.overflow = on ? "hidden" : ""; return; }
   if(f){
     const k = f.dataset.f, off = !OFF.has(k); off ? OFF.add(k) : OFF.delete(k);
@@ -303,7 +321,7 @@ app.addEventListener("wheel", ev => { // Ctrl + rueda (o pellizco en trackpad) a
 }, {passive: false});
 app.addEventListener("dblclick", ev => {
   const zw = ev.target.closest(".zw"); if(!zw || ev.target.closest(".pin")) return;
-  const r = zw.getBoundingClientRect(); zoom(zoomActual() > 100 ? 100 : 250, ev.clientX - r.left, ev.clientY - r.top);
+  const r = zw.getBoundingClientRect(); zoom(zoomActual() !== 100 ? 100 : 250, ev.clientX - r.left, ev.clientY - r.top);
 });
 let arr = null; // arrastrar con el mouse para mover el plano ampliado
 app.addEventListener("pointerdown", ev => {
@@ -315,6 +333,7 @@ document.addEventListener("pointermove", ev => { if(arr){ arr.zw.scrollLeft = ar
 document.addEventListener("pointerup", () => { if(arr){ arr.zw.classList.remove("g"); arr = null; } });
 
 function vistaLista(db){
+  app.className = "";
   app.innerHTML = navegacion("lista") + `<div class="card"><h2>Extintores registrados</h2>
     <button class="pdf" onclick="generarPDF(this)">Descargar informe PDF</button>
     <input id="q" type="search" placeholder="Buscar por código, nombre o ubicación"><div id="lista"></div></div>`;
