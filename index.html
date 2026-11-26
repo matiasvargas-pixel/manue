@@ -44,10 +44,16 @@ dialog label{display:block;font-weight:600;margin:8px 0 3px}
 .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .acts button,.acts a{flex:1;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer;text-align:center;text-decoration:none}
 .acts .p{background:var(--red);color:#fff;border-color:var(--red)}
-/* Botón de acceso con contraseña (ficha del extintor) */
-.acc{display:block;width:100%;margin-top:14px;padding:11px 12px;border:1px solid var(--red);border-radius:8px;background:none;color:var(--red);font-weight:600;font-size:1rem;font-family:inherit;cursor:pointer}
-.acc:hover{background:var(--red);color:#fff}
+/* Botón de acceso con contraseña (ficha del extintor): solo candado, esquina superior derecha de la tarjeta */
+.card.fx{position:relative}
+.card.fx h1{padding-right:44px}
+.acc{position:absolute;top:10px;right:10px;display:flex;align-items:center;justify-content:center;width:36px;height:36px;margin:0;padding:0;border:1px solid var(--red);border-radius:8px;background:none;color:var(--red);opacity:.55;cursor:pointer;transition:none;animation:none}
+.acc svg{display:block}
+.acc:hover{opacity:.55;background:none;color:var(--red)}
 .acc:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+/* Vista bloqueada: solo el candado, centrado en la tarjeta */
+.card.bq{display:flex;justify-content:center;padding:28px 16px}
+.card.bq .acc{position:static}
 /* Tarjeta de cada extintor en la lista */
 a.exc{display:block;color:inherit;text-decoration:none;background:var(--bg);border:1px solid var(--line);border-left-width:5px;border-radius:10px;padding:12px 14px;margin-bottom:10px}
 a.exc:last-child{margin-bottom:0}
@@ -325,15 +331,17 @@ function filasExtintor(e){
 function vistaExtintor(e){
   const [cls, txt] = estado(e.vencimiento, e.horaVenc);
   const filas = filasExtintor(e);
-  let h = `<div class="card"><h1>${esc(e.nombre || e.id)}</h1><div class="id">Código ${esc(e.id)}</div>
-    <div class="est ${cls}" id="est">${esc(txt)}</div>
-    <button class="acc" id="acc" type="button">${ACC ? "Ver todos los extintores y planos" : "🔒 Acceso con contraseña"}</button></div>
+  let h = `<div class="card fx"><button class="acc" id="acc" type="button" aria-label="${ACC ? "Ver todos los extintores y planos" : "Acceso con contraseña"}" title="${ACC ? "Ver todos los extintores y planos" : "Acceso con contraseña"}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></button>
+    <h1>${esc(e.nombre || e.id)}</h1><div class="id">Código ${esc(e.id)}</div>
+    <div class="est ${cls}" id="est">${esc(txt)}</div></div>
     <div class="card"><dl>${filas.map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl></div>`;
   // El mapa es un archivo SVG de la carpeta de la empresa; se muestra como imagen (no ejecuta scripts).
   if(e.mapa && /^[\w\-./]+\.svg$/i.test(e.mapa) && !e.mapa.includes("..")){
     const punto = e.mapaX != null && e.mapaY != null && e.mapaX !== "" && e.mapaY !== "";
-    h += `<div class="card"><h2>Mapa de ubicación</h2><div class="mp"><img src="${esc(ruta(e.mapa))}" alt="Mapa de ubicación del extintor ${esc(e.id)}">
-      ${punto ? `<i class="dot" style="left:${+e.mapaX}%;top:${+e.mapaY}%"></i>` : ""}</div>
+    h += `<div class="card"><h2>Mapa de ubicación</h2><div class="pv" id="pv">
+      <div class="zb" role="group" aria-label="Controles del mapa"><button data-z="-" aria-label="Alejar">−</button><output id="zl" aria-live="polite">${ZOOM0}%</output><button data-z="+" aria-label="Acercar">+</button><button data-z="0">Restablecer</button><button data-fs aria-label="Pantalla completa" title="Pantalla completa">⛶</button></div>
+      <div class="zw" id="zw"><div class="mp" id="mp" style="width:${ZOOM0}%"><img src="${esc(ruta(e.mapa))}" alt="Mapa de ubicación del extintor ${esc(e.id)}" draggable="false">
+      ${punto ? `<i class="dot" style="left:${+e.mapaX}%;top:${+e.mapaY}%"></i>` : ""}</div></div></div>
       ${punto ? '<p class="hint">El punto rojo indica dónde está el extintor.</p>' : ""}</div>`;
   }
   return h;
@@ -346,8 +354,8 @@ const irALista = () => { dk.close(); navegar("lista"); };
 const accederTodo = () => ACC ? irALista() : pedirClave(irALista);
 
 function pedirClave(alEntrar){
-  dk.innerHTML = `<h2>Acceso restringido</h2><p class="hint">Ingresa la contraseña para ver todos los extintores, los planos y el informe.</p>
-    <label for="pk">Contraseña</label><input id="pk" type="password" autocomplete="off">
+  dk.setAttribute("aria-label", "Contraseña de acceso");
+  dk.innerHTML = `<label for="pk">Contraseña</label><input id="pk" type="password" autocomplete="off">
     <p class="hint" id="mk" role="alert"></p>
     <div class="acts"><button id="kn" type="button">Cancelar</button><button class="p" id="ko" type="button">Entrar</button></div>`;
   dk.showModal(); $("#pk").focus();
@@ -364,8 +372,7 @@ function pedirClave(alEntrar){
 
 function vistaBloqueada(vista){ // lista y planos solo se ven con contraseña
   app.className = "";
-  app.innerHTML = `<div class="card"><h1>Acceso restringido</h1><p class="hint">Esta sección es solo para personal autorizado.</p>
-    <button class="acc" id="bk" type="button">🔒 Ingresar contraseña</button></div>`;
+  app.innerHTML = `<div class="card bq"><button class="acc" id="bk" type="button" aria-label="Ingresar contraseña" title="Ingresar contraseña"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></button></div>`;
   $("#bk").onclick = () => pedirClave(() => { dk.close(); vista === "planos" ? vistaPlanos(DB) : vistaLista(DB); });
 }
 
@@ -391,6 +398,7 @@ dx.onclick = ev => { // clic fuera del cuadro lo cierra
 
 const ETQ = {ok: "Vigente", warn: "Por vencer", bad: "Vencido", sin: "Sin fecha"};
 let PL = [], PI = 0, OFF = new Set(), SEL = "";
+const ZOOM0 = 50; // zoom inicial (%) del plano y del mapa de la ficha
 const zoomActual = () => parseFloat($("#mp").style.width) || 100;
 
 function vistaPlanos(db){
@@ -423,8 +431,8 @@ function pintarPlano(anim = true){
   $("#pl").innerHTML = `<div class="ph"><div><h2>${esc(nombrePlano(p))}</h2>
       <p class="hint">${PL.length > 1 ? `Plano ${PI + 1} de ${PL.length} · ` : ""}${con.length} extintor${con.length === 1 ? "" : "es"} marcado${con.length === 1 ? "" : "s"}. Toca un punto para ver sus datos.</p></div></div>
     <div class="pg"><div class="pv" id="pv">
-      <div class="zb" role="group" aria-label="Controles del plano"><button data-z="-" aria-label="Alejar">−</button><output id="zl" aria-live="polite">100%</output><button data-z="+" aria-label="Acercar">+</button><button data-z="0">Restablecer</button><button data-fs aria-label="Pantalla completa" title="Pantalla completa">⛶</button></div>
-      <div class="zw" id="zw"><div class="mp" id="mp" style="width:100%"><img src="${esc(ruta(p))}" alt="Plano ${esc(nombrePlano(p))}" draggable="false">
+      <div class="zb" role="group" aria-label="Controles del plano"><button data-z="-" aria-label="Alejar">−</button><output id="zl" aria-live="polite">${ZOOM0}%</output><button data-z="+" aria-label="Acercar">+</button><button data-z="0">Restablecer</button><button data-fs aria-label="Pantalla completa" title="Pantalla completa">⛶</button></div>
+      <div class="zw" id="zw"><div class="mp" id="mp" style="width:${ZOOM0}%"><img src="${esc(ruta(p))}" alt="Plano ${esc(nombrePlano(p))}" draggable="false">
         ${con.map(x => `<button class="pin ${x.c[0]}" style="left:${+x.e.mapaX}%;top:${+x.e.mapaY}%" data-id="${esc(x.e.id)}" data-c="${x.c[0]}" title="${esc(x.e.id + " · " + x.c[1])}" aria-label="${esc("Extintor " + x.e.id + ": " + (x.e.nombre || "") + ". " + x.c[1])}"></button>`).join("")}
       </div></div><p class="ley">Doble clic o Ctrl + rueda para acercar. Arrastra para mover el plano.</p></div>
     <aside class="pside"><div class="chips" role="group" aria-label="Filtrar por estado">${["bad", "warn", "ok", "sin"].filter(k => cuenta(k)).map(k => `<button class="chip ${k}" data-f="${k}" aria-pressed="true"><i></i>${ETQ[k]} <b>${cuenta(k)}</b></button>`).join("")}</div>
@@ -485,7 +493,7 @@ app.addEventListener("click", ev => {
   }
   const t = ev.target, tab = t.closest("[data-p]"), z = t.closest("[data-z]"), f = t.closest("[data-f]");
   if(tab) return cambiarPlano(+tab.dataset.p);
-  if(z) return zoom(z.dataset.z === "0" ? 100 : zoomActual() + (z.dataset.z === "+" ? (zoomActual() >= 100 ? 50 : 25) : (zoomActual() > 100 ? -50 : -25)));
+  if(z) return zoom(z.dataset.z === "0" ? ZOOM0 : zoomActual() + (z.dataset.z === "+" ? (zoomActual() >= 100 ? 50 : 25) : (zoomActual() > 100 ? -50 : -25)));
   if(t.closest("[data-fs]")){ const pv = $("#pv"), on = pv.classList.toggle("fs"); document.body.style.overflow = on ? "hidden" : ""; return; }
   if(f){
     const k = f.dataset.f, off = !OFF.has(k); off ? OFF.add(k) : OFF.delete(k);
@@ -524,10 +532,33 @@ function vistaLista(db){
   app.className = "";
   app.innerHTML = navegacion("lista") + `<div class="card"><h2>Extintores registrados</h2>
     <button class="pdf" onclick="generarPDF(this)">Ver / descargar informe PDF</button>
-    <input id="q" type="search" placeholder="Buscar por código, nombre o ubicación"><div id="lista"></div></div>`;
+    <input id="q" type="search" placeholder="Buscar por código, nombre o ubicación">
+    <label for="ord">Ordenar por</label>
+    <select id="ord">
+      <option value="c-asc">Código: de menor a mayor (1 → 9)</option>
+      <option value="c-desc">Código: de mayor a menor (9 → 1)</option>
+      <option value="v-bad">Estado: vencidos → por vencer → vigentes</option>
+      <option value="v-ok">Estado: vigentes → por vencer → vencidos</option>
+    </select><div id="lista"></div></div>`;
   const pintar = () => {
     const q = $("#q").value.toLowerCase();
     const r = db.extintores.filter(e => (e.id + " " + e.nombre + " " + e.ubicacion).toLowerCase().includes(q));
+    const modo = $("#ord").value;
+    const porCodigo = (a, b) => String(a.id).localeCompare(String(b.id), undefined, {numeric: true, sensitivity: "base"});
+    const RANGO = {bad: 0, warn: 1, ok: 2}; // jerarquía: vencido (rojo) → por vencer (ámbar) → vigente (verde)
+    const rango = e => { const c = estado(e.vencimiento, e.horaVenc)[0]; return c in RANGO ? RANGO[c] : 3; };
+    const fecha = e => new Date(e.vencimiento + "T" + (e.horaVenc || "23:59:59")).getTime();
+    if(modo === "c-asc") r.sort(porCodigo);
+    else if(modo === "c-desc") r.sort((a, b) => porCodigo(b, a));
+    else{
+      const inv = modo === "v-ok"; // vigentes primero = el orden inverso
+      r.sort((a, b) => {
+        const ra = rango(a), rb = rango(b);
+        if(ra === 3 || rb === 3) return ra === rb ? porCodigo(a, b) : ra === 3 ? 1 : -1; // sin fecha siempre al final
+        if(ra !== rb) return inv ? rb - ra : ra - rb;
+        return (inv ? fecha(b) - fecha(a) : fecha(a) - fecha(b)) || porCodigo(a, b);
+      });
+    }
     $("#lista").innerHTML = r.map(e => {
       const [c, t] = estado(e.vencimiento, e.horaVenc);
       const v = e.vencimiento ? fd(e.vencimiento) + (e.horaVenc ? ", " + fh(e.horaVenc) : "") : "";
@@ -537,21 +568,47 @@ function vistaLista(db){
         ${v ? `<small class="ven">Vencimiento: ${esc(v)}</small>` : ""}</a>`;
     }).join("") || "<p>No hay resultados.</p>";
   };
-  $("#q").oninput = pintar; pintar();
+  $("#q").oninput = pintar; $("#ord").onchange = pintar; pintar();
 }
 
 /* ---------- Informe PDF ---------- */
 function logoData(urls){
-  const probar = u => new Promise(res => {
-    const i = new Image(); i.crossOrigin = "anonymous";
-    i.onload = () => { try{
-      const c = document.createElement("canvas"); c.width = i.naturalWidth; c.height = i.naturalHeight;
-      const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(i, 0, 0);
-      res({url: c.toDataURL("image/jpeg", .92), w: i.naturalWidth, h: i.naturalHeight});
-    }catch(e){ res(null); } };
-    i.onerror = () => res(null); i.src = u;
+  const dura = u => /^(data:|blob:)/i.test(u);
+  // Pasa una imagen ya cargada a PNG (nítido y con fondo blanco); devuelve null si el navegador no deja leerla
+  const aPng = i => { try{
+    let w = i.naturalWidth, h = i.naturalHeight;
+    if(!w || !h){ w = 900; h = 900; } // SVG sin tamaño propio
+    const k = Math.min(1, 1000 / Math.max(w, h));
+    const c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(h * k);
+    const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+    x.imageSmoothingQuality = "high"; x.drawImage(i, 0, 0, c.width, c.height);
+    return {url: c.toDataURL("image/png"), w: c.width, h: c.height};
+  }catch(e){ return null; } };
+  const dibujar = src => new Promise(res => {
+    const i = new Image(); if(!dura(src)) i.crossOrigin = "anonymous";
+    i.onload = () => res(aPng(i)); i.onerror = () => res(null); i.src = src;
   });
-  return urls.filter(Boolean).reduce((p, u) => p.then(r => r || probar(u)), Promise.resolve(null));
+  const probar = async u => {
+    if(dura(u)) return dibujar(u);
+    // 1) Pide la imagen reutilizando la copia que el navegador ya guardó, y si no sirve, una nueva
+    for(const cache of ["force-cache", "no-store"]){
+      try{
+        const r = await fetch(u, {mode: "cors", cache});
+        if(r.ok){
+          const ou = URL.createObjectURL(await r.blob());
+          const g = await dibujar(ou); URL.revokeObjectURL(ou);
+          if(g) return g;
+        }
+      }catch(e){}
+    }
+    // 2) Carga directa con CORS y con un parámetro para evitar la caché
+    return (await dibujar(u + (u.includes("?") ? "&" : "?") + "_nb=" + Date.now())) || dibujar(u);
+  };
+  const lista = [...new Set(urls.filter(Boolean).map(u => dura(u) ? u : new URL(u, location.href).href))];
+  // 0) Primero, el logo que ya está cargado en la parte superior de la página
+  const cab = document.getElementById("logo");
+  const yaCargado = cab && cab.complete && cab.naturalWidth ? aPng(cab) : null;
+  return lista.reduce((p, u) => p.then(r => r || probar(u)), Promise.resolve(yaCargado));
 }
 
 /* ---------- Vista previa del informe (visor con zoom, descarga al final) ---------- */
@@ -578,10 +635,10 @@ async function vistaPrevia(doc, nombre){
     $("#pzl").textContent = Math.round(z * 100) + "%";
     dp.querySelector('[data-pz="-"]').disabled = zi === 0; dp.querySelector('[data-pz="+"]').disabled = zi === ZS.length - 1;
     const cont = document.createElement("div"); cont.className = "hojas"; cont.style.width = z * 100 + "%";
-    const ancho = Math.max(vb.clientWidth - 24, 200) * z, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const ancho = Math.max(vb.clientWidth - 24, 200) * z, dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1.75), 3);
     for(let i = 1; i <= pdf.numPages; i++){
       const pg = await pdf.getPage(i); if(mi !== tok) return;
-      const v0 = pg.getViewport({scale: 1}), v = pg.getViewport({scale: Math.min(ancho * dpr, 2400) / v0.width});
+      const v0 = pg.getViewport({scale: 1}), v = pg.getViewport({scale: Math.min(ancho * dpr, 3200) / v0.width});
       const cv = document.createElement("canvas"); cv.width = v.width; cv.height = v.height;
       await pg.render({canvasContext: cv.getContext("2d"), viewport: v}).promise; if(mi !== tok) return;
       cont.appendChild(cv);
@@ -612,8 +669,10 @@ async function generarPDF(btn){
     const W = doc.internal.pageSize.getWidth(), now = new Date(), p = n => String(n).padStart(2, "0");
     const fecha = now.toLocaleDateString("es-PE", {day: "numeric", month: "long", year: "numeric"});
     const hora = fh(p(now.getHours()) + ":" + p(now.getMinutes()));
-    const lg = await logoData([EMP.logo, CFG.logo]);
-    if(lg){ let h = 20, w = h * lg.w / lg.h; if(w > 60){ w = 60; h = w * lg.h / lg.w; } doc.addImage(lg.url, "JPEG", 14, 10, w, h); }
+    const absoluta = u => /^(https?:|data:|blob:)/i.test(u || "");
+    const lg = await logoData([EMP.logo, EMP.logo && !absoluta(EMP.logo) ? ruta(EMP.logo) : "", CFG.logo, DEF.logo]);
+    if(lg){ let h = 20, w = h * lg.w / lg.h; if(w > 60){ w = 60; h = w * lg.h / lg.w; } doc.addImage(lg.url, "PNG", 14, 10, w, h, undefined, "FAST"); }
+    else console.warn("No se pudo leer el logo para el PDF (¿el servidor del logo no permite CORS?).");
     doc.setTextColor(29, 26, 25); doc.setFont("helvetica", "bold"); doc.setFontSize(18);
     doc.text("Informe de estado de extintores", W - 14, 17, {align: "right"});
     doc.setFontSize(12); doc.text(EMP.nombre || "", W - 14, 24, {align: "right"});
