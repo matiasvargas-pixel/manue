@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Extintor · NEXBRIG</title>
+<link rel="icon" type="image/svg+xml" href="favicon/favicon-nexbrig.svg">
 <style>
-:root{--bg:#f3f1ee;--card:#fff;--ink:#1d1a19;--mut:#6f6762;--line:#e0dbd6;--red:#b3261e;--ok:#1f7a45;--warn:#b26a00;--bad:#b3261e}
-@media(prefers-color-scheme:dark){:root{--bg:#161413;--card:#201d1c;--ink:#f1ece8;--mut:#a39b95;--line:#3a3532;--red:#ef6a5f;--ok:#4cc180;--warn:#f0a63a;--bad:#ff7a70}}
+:root{--bg:#f3f1ee;--card:#fff;--ink:#1d1a19;--mut:#6f6762;--line:#e0dbd6;--red:#b3261e;--ok:#40B065;--warn:#E5A11A;--bad:#b3261e}
+@media(prefers-color-scheme:dark){:root{--bg:#161413;--card:#201d1c;--ink:#f1ece8;--mut:#a39b95;--line:#3a3532;--red:#ef6a5f;--ok:#40B065;--warn:#E5A11A;--bad:#ff7a70}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,sans-serif;padding-top:env(safe-area-inset-top,0)}
 header{--lw:min(150px,26vw);display:grid;grid-template-columns:var(--lw) 1fr var(--lw);align-items:center;gap:8px;padding:12px 16px;background:var(--card);border-bottom:4px solid var(--red)}
@@ -153,7 +154,7 @@ main.inicio{max-width:1040px}
 .rv.in{opacity:1;animation:sube .8s cubic-bezier(.2,.7,.2,1) var(--d,0s) backwards}
 @keyframes sube{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @keyframes flota{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes latido{0%{box-shadow:0 0 0 0 rgba(125,255,176,.7)}70%,100%{box-shadow:0 0 0 8px rgba(125,255,176,0)}}
+@keyframes latido{0%{box-shadow:0 0 0 0 rgba(64,176,101,.7)}70%,100%{box-shadow:0 0 0 8px rgba(64,176,101,0)}}
 @keyframes barre{0%,100%{top:14px}50%{top:calc(100% - 17px)}}
 @keyframes onda{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.55);opacity:0}}
 
@@ -161,7 +162,7 @@ main.inicio{max-width:1040px}
 .hero::before{content:"";position:absolute;z-index:-1;top:-35%;right:-12%;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.2),transparent 66%);animation:flota 9s ease-in-out infinite}
 .hero::after{content:"";position:absolute;z-index:-1;inset:0;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:38px 38px;-webkit-mask-image:linear-gradient(115deg,transparent 30%,#000);mask-image:linear-gradient(115deg,transparent 30%,#000)}
 .hero .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;border-radius:999px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);font-size:.76rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
-.hero .tag i{width:8px;height:8px;border-radius:50%;background:#7dffb0;animation:latido 2.2s infinite}
+.hero .tag i{width:8px;height:8px;border-radius:50%;background:#40B065;animation:latido 2.2s infinite}
 .hero h1{margin:16px 0 12px;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.1;letter-spacing:-.6px}
 .hero h1 em{font-style:normal;background:linear-gradient(90deg,#fff,#ffd9d4);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero p{margin:0 0 24px;max-width:46ch;font-size:1.05rem;opacity:.93}
@@ -228,8 +229,22 @@ main.inicio{max-width:1040px}
 .dr.ok span{color:var(--ok)}.dr.warn span{color:var(--warn)}.dr.bad span{color:var(--bad)}
 .bar{height:7px;border-radius:99px;background:var(--line);overflow:hidden}
 .bar i{display:block;width:0;height:100%;border-radius:inherit;transition:width 1.4s cubic-bezier(.2,.7,.2,1) .35s}
-.dr.ok .bar i{background:var(--ok)}.dr.warn .bar i{background:var(--warn)}.dr.bad .bar i{background:var(--bad)}
+.dr.ok .bar i{background:var(--ok)}.dr.sin .bar i{background:var(--mut)}.dr.warn .bar i{background:var(--warn)}.dr.bad .bar i{background:var(--bad)}
 .dm.in .bar i{width:var(--w)}
+/* Lista de extintores con el diseño de tarjeta de estado */
+.lh{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.lh h2{margin:0}
+.pdfb{display:inline-flex;align-items:center;gap:6px;flex:none;padding:8px 12px;border:0;border-radius:8px;background:var(--red);color:#fff;font:600 .9rem inherit;font-family:inherit;cursor:pointer}
+.pdfb:hover{filter:brightness(1.08)}
+.pdfb:disabled{opacity:.6;cursor:wait}
+.pdfb:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.dr.sin{border-left-color:var(--mut)}.dr.sin span{color:var(--mut)}
+a.dr.lk{display:block;color:inherit;text-decoration:none;transition:border-color .2s,transform .2s}
+a.dr.lk:hover{border-top-color:var(--red);border-right-color:var(--red);border-bottom-color:var(--red)}
+a.dr.lk:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+a.dr.lk small{display:block;color:var(--mut);font-size:.8rem}
+a.dr.lk .bar i{width:var(--w)}
+a.dr.lk .bar{margin-bottom:6px}
 
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .step{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px}
@@ -530,8 +545,8 @@ document.addEventListener("pointerup", () => { if(arr){ arr.zw.classList.remove(
 
 function vistaLista(db){
   app.className = "";
-  app.innerHTML = navegacion("lista") + `<div class="card"><h2>Extintores registrados</h2>
-    <button class="pdf" onclick="generarPDF(this)">Ver / descargar informe PDF</button>
+  app.innerHTML = navegacion("lista") + `<div class="card"><div class="lh"><h2>Extintores registrados</h2>
+    <button class="pdfb" type="button" onclick="generarPDF(this)" aria-label="Ver o descargar informe PDF" title="Ver o descargar informe PDF"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5M5 20h14"/></svg>PDF</button></div>
     <input id="q" type="search" placeholder="Buscar por código, nombre o ubicación">
     <label for="ord">Ordenar por</label>
     <select id="ord">
@@ -559,12 +574,21 @@ function vistaLista(db){
         return (inv ? fecha(b) - fecha(a) : fecha(a) - fecha(b)) || porCodigo(a, b);
       });
     }
+    // Barra: proporción de vida útil que queda (desde la recarga, o 365 días si no hay recarga)
+    const pct = e => {
+      if(!e.vencimiento) return 0;
+      const fin = new Date(e.vencimiento + "T" + (e.horaVenc || "23:59:59")).getTime(), ms = fin - Date.now();
+      if(isNaN(ms) || ms <= 0) return 4;
+      const ini = e.recarga ? new Date(e.recarga + "T00:00:00").getTime() : NaN;
+      const tot = fin - ini > 0 ? fin - ini : 365 * 864e5;
+      return Math.max(4, Math.min(100, Math.round(ms / tot * 100)));
+    };
     $("#lista").innerHTML = r.map(e => {
       const [c, t] = estado(e.vencimiento, e.horaVenc);
       const v = e.vencimiento ? fd(e.vencimiento) + (e.horaVenc ? ", " + fh(e.horaVenc) : "") : "";
-      return `<a class="exc ${c}" href="${enlace(e.id)}"><span class="t">${esc(e.id)} · ${esc(e.nombre || "")}</span>
+      return `<a class="dr lk ${c}" href="${enlace(e.id)}"><b>${esc(e.id)} · ${esc(e.nombre || "")}</b>
         ${e.ubicacion ? `<small>${esc(e.ubicacion)}</small>` : ""}
-        <div class="est ${c}">${esc(t)}</div>
+        <span>${esc(t)}</span><div class="bar"><i style="--w:${pct(e)}%"></i></div>
         ${v ? `<small class="ven">Vencimiento: ${esc(v)}</small>` : ""}</a>`;
     }).join("") || "<p>No hay resultados.</p>";
   };
@@ -663,7 +687,7 @@ async function vistaPrevia(doc, nombre){
 
 async function generarPDF(btn){
   if(!window.jspdf || !DB) return alert("No se pudo cargar el generador de PDF. Revisa tu conexión e inténtalo de nuevo.");
-  const txtBtn = btn.textContent; btn.disabled = true; btn.textContent = "Generando informe…";
+  btn.disabled = true; btn.setAttribute("aria-busy", "true");
   try{
     const doc = new window.jspdf.jsPDF({orientation: "landscape", unit: "mm", format: "a4"});
     const W = doc.internal.pageSize.getWidth(), now = new Date(), p = n => String(n).padStart(2, "0");
@@ -691,7 +715,7 @@ async function generarPDF(btn){
     doc.text("Total: " + filas.length + "   |   Vigentes: " + n("ok") + "   |   Por vencer: " + n("warn") +
       "   |   Vencidos: " + n("bad") + (n("sin") ? "   |   Sin fecha: " + n("sin") : ""), 14, 43);
 
-    const color = {ok: [31, 122, 69], warn: [178, 106, 0], bad: [179, 38, 30], sin: [111, 103, 98]};
+    const color = {ok: [64, 176, 101], warn: [229, 161, 26], bad: [179, 38, 30], sin: [111, 103, 98]};
     doc.autoTable({
       startY: 48,
       head: [["Código", "Nombre", "Tipo", "Capacidad", "Ubicación", "Vencimiento", "Estado"]],
@@ -715,7 +739,7 @@ async function generarPDF(btn){
   }catch(err){
     alert("No se pudo generar el PDF.");
   }finally{
-    btn.disabled = false; btn.textContent = txtBtn;
+    btn.disabled = false; btn.removeAttribute("aria-busy");
   }
 }
 
