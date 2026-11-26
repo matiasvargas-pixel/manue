@@ -12,6 +12,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",sys
 header{--lw:min(150px,26vw);display:grid;grid-template-columns:var(--lw) 1fr var(--lw);align-items:center;gap:8px;padding:12px 16px;background:var(--card);border-bottom:4px solid var(--red)}
 header img{width:var(--lw);height:76px;padding:6px;object-fit:contain;object-position:center;background:#fff;border-radius:8px}
 header span{min-width:0;text-align:center;font-size:clamp(1rem,3.6vw,1.6rem);font-weight:700;line-height:1.2;letter-spacing:.2px;overflow-wrap:anywhere}
+/* Computadora: recuadro del logo más grande */
+@media(min-width:821px){header{--lw:190px;padding:14px 24px}header img{height:96px}}
+/* Celular: recuadro del logo más pequeño y nombre de la empresa más grande */
+@media(max-width:600px){header{--lw:min(104px,22vw);padding:10px 12px}header img{height:56px;padding:4px}header span{font-size:clamp(1.15rem,5.6vw,1.5rem)}}
 main{transition:max-width .3s ease;max-width:640px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom,0))}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
 h1{margin:0 0 2px;font-size:1.5rem;line-height:1.2}
@@ -40,6 +44,35 @@ dialog label{display:block;font-weight:600;margin:8px 0 3px}
 .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .acts button,.acts a{flex:1;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer;text-align:center;text-decoration:none}
 .acts .p{background:var(--red);color:#fff;border-color:var(--red)}
+/* Botón de acceso con contraseña (ficha del extintor) */
+.acc{display:block;width:100%;margin-top:14px;padding:11px 12px;border:1px solid var(--red);border-radius:8px;background:none;color:var(--red);font-weight:600;font-size:1rem;font-family:inherit;cursor:pointer}
+.acc:hover{background:var(--red);color:#fff}
+.acc:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+/* Tarjeta de cada extintor en la lista */
+a.exc{display:block;color:inherit;text-decoration:none;background:var(--bg);border:1px solid var(--line);border-left-width:5px;border-radius:10px;padding:12px 14px;margin-bottom:10px}
+a.exc:last-child{margin-bottom:0}
+a.exc:hover{border-color:var(--red)}
+a.exc.ok{border-left-color:var(--ok)}a.exc.warn{border-left-color:var(--warn)}a.exc.bad{border-left-color:var(--bad)}a.exc.sin{border-left-color:var(--mut)}
+a.exc .t{display:block;font-weight:600}
+a.exc small{display:block;color:var(--mut)}
+a.exc .est{margin-top:8px;padding:5px 10px;font-size:.92rem}
+a.exc .ven{margin-top:6px}
+/* Vista previa del informe PDF */
+#dp{padding:0;width:min(96vw,1000px);height:92vh;max-width:none;max-height:none;overflow:hidden}
+#dp[open]{display:flex;flex-direction:column}
+.vt{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--card)}
+.vt strong{flex:1 1 150px}
+.vacts{display:flex;gap:8px}
+.vacts button{padding:9px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-weight:600;font-size:.95rem;font-family:inherit;cursor:pointer}
+.vacts .p{background:var(--red);border-color:var(--red);color:#fff}
+.vacts button:focus-visible,.vt .zb button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.vt .zb button:disabled{opacity:.4;cursor:default}
+.vb{flex:1;min-height:0;overflow:auto;background:#5b5856;padding:12px;overscroll-behavior:contain}
+.vb>p{color:#fff;text-align:center;margin:24px 0}
+.hojas{margin:0 auto}
+.hojas canvas{display:block;width:100%;height:auto;background:#fff;margin:0 auto 12px;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+.vb iframe{width:100%;height:100%;min-height:60vh;border:0;background:#fff}
+@media(max-width:600px){#dp{width:100vw;height:100vh;height:100dvh;border-radius:0;border:0}.vb{padding:8px}}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.28s}
 /* Navegación Extintores / Planos */
 .nav{display:flex;gap:6px;margin-bottom:14px}
@@ -104,6 +137,125 @@ main.ancho{max-width:1100px}
 .ley{margin:10px 0 0;color:var(--mut);font-size:.8rem}
 @media(max-width:820px){.pg{grid-template-columns:1fr}.fl{max-height:320px}.zw.z{max-height:65vh}}
 @media(prefers-reduced-motion:reduce){.pin,#pl.fade{animation:none!important;transition:none}}
+
+/* ---------- Portada (pantalla principal sin código QR) ---------- */
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+main.inicio{max-width:1040px}
+.inicio section{scroll-margin-top:16px}
+/* Aparición suave al hacer scroll (la animación se libera al terminar, así el hover sigue funcionando) */
+.rv{opacity:0}
+.rv.in{opacity:1;animation:sube .8s cubic-bezier(.2,.7,.2,1) var(--d,0s) backwards}
+@keyframes sube{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes flota{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes latido{0%{box-shadow:0 0 0 0 rgba(125,255,176,.7)}70%,100%{box-shadow:0 0 0 8px rgba(125,255,176,0)}}
+@keyframes barre{0%,100%{top:14px}50%{top:calc(100% - 17px)}}
+@keyframes onda{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.55);opacity:0}}
+
+.hero{position:relative;overflow:hidden;isolation:isolate;display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center;padding:44px 34px;margin-bottom:16px;border-radius:20px;color:#fff;background:linear-gradient(135deg,#7f1913 0%,#b3261e 55%,#d4483c 100%);box-shadow:0 18px 44px rgba(179,38,30,.28)}
+.hero::before{content:"";position:absolute;z-index:-1;top:-35%;right:-12%;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.2),transparent 66%);animation:flota 9s ease-in-out infinite}
+.hero::after{content:"";position:absolute;z-index:-1;inset:0;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:38px 38px;-webkit-mask-image:linear-gradient(115deg,transparent 30%,#000);mask-image:linear-gradient(115deg,transparent 30%,#000)}
+.hero .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;border-radius:999px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);font-size:.76rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
+.hero .tag i{width:8px;height:8px;border-radius:50%;background:#7dffb0;animation:latido 2.2s infinite}
+.hero h1{margin:16px 0 12px;font-size:clamp(1.8rem,4.6vw,2.8rem);line-height:1.1;letter-spacing:-.6px}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,#fff,#ffd9d4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{margin:0 0 24px;max-width:46ch;font-size:1.05rem;opacity:.93}
+.hero .btns{display:flex;flex-wrap:wrap;gap:10px}
+.bt{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:10px;font-weight:600;font-size:.98rem;text-decoration:none;transition:transform .2s,box-shadow .2s,background .2s}
+.bt.w{background:#fff;color:#7f1913}
+.bt.w:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(0,0,0,.28)}
+.bt.g{border:1px solid rgba(255,255,255,.55);color:#fff}
+.bt.g:hover{background:rgba(255,255,255,.14)}
+.bt:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.bt svg{transition:transform .2s}.bt:hover svg{transform:translateY(2px)}
+
+.hv{position:relative;display:grid;place-items:center;min-height:290px}
+.scan{position:relative;width:min(236px,72%);aspect-ratio:1;padding:20px;border-radius:20px;background:#fff;box-shadow:0 24px 54px rgba(0,0,0,.38)}
+.scan>svg{display:block;width:100%;height:100%}
+.scan .c{position:absolute;width:26px;height:26px;border:3px solid #b3261e}
+.scan .c.a{top:7px;left:7px;border-right:0;border-bottom:0;border-top-left-radius:10px}
+.scan .c.b{top:7px;right:7px;border-left:0;border-bottom:0;border-top-right-radius:10px}
+.scan .c.c2{bottom:7px;left:7px;border-right:0;border-top:0;border-bottom-left-radius:10px}
+.scan .c.d{bottom:7px;right:7px;border-left:0;border-top:0;border-bottom-right-radius:10px}
+.scan .ln{position:absolute;left:12px;right:12px;top:14px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#b3261e,transparent);box-shadow:0 0 16px 3px rgba(179,38,30,.55);animation:barre 3.4s ease-in-out infinite}
+.fchip{position:absolute;display:flex;align-items:center;gap:8px;padding:8px 13px;border-radius:12px;background:var(--card);color:var(--ink);font-size:.82rem;font-weight:600;white-space:nowrap;box-shadow:0 12px 30px rgba(0,0,0,.3);animation:flota 6s ease-in-out infinite}
+.fchip i{width:10px;height:10px;border-radius:50%}
+.fchip.o1{top:6%;right:0}.fchip.o1 i{background:var(--ok)}
+.fchip.o2{bottom:8%;left:0;animation-delay:-3s}.fchip.o2 i{background:var(--warn)}
+
+.pista{display:flex;align-items:center;gap:14px;padding:14px 18px}
+.pista .pi,.feat .ic{position:relative;flex:none;display:grid;place-items:center;border-radius:12px;color:var(--red);background:color-mix(in srgb,var(--red) 12%,transparent)}
+.pista .pi{width:46px;height:46px}
+.pista .pi::after{content:"";position:absolute;inset:0;border-radius:inherit;border:2px solid var(--red);animation:onda 2.4s ease-out infinite}
+.pista p{margin:0;font-weight:600}
+
+.sec-h{text-align:center;margin:40px 0 20px}
+.sec-h small{color:var(--red);font-weight:700;font-size:.78rem;letter-spacing:1.4px;text-transform:uppercase}
+.sec-h h2{margin:6px 0 4px;font-size:clamp(1.35rem,3.4vw,1.95rem);line-height:1.2}
+.sec-h p{margin:0 auto;max-width:56ch;color:var(--mut)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:6px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--line)}
+.stat{padding:18px 10px;text-align:center;background:var(--card)}
+.stat b{display:block;font-size:1.8rem;line-height:1.15;color:var(--red)}
+.stat span{color:var(--mut);font-size:.84rem}
+
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.feat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;transition:transform .3s,box-shadow .3s,border-color .3s}
+.feat:hover{transform:translateY(-5px);border-color:var(--red);box-shadow:0 16px 36px rgba(0,0,0,.13)}
+.feat .ic{width:48px;height:48px;margin-bottom:14px;transition:background .3s,color .3s}
+.feat:hover .ic{background:var(--red);color:#fff}
+.feat h3{margin:0 0 6px;font-size:1.05rem}
+.feat p{margin:0;color:var(--mut);font-size:.93rem}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:center;margin-top:44px}
+.split h2{margin:0 0 10px;font-size:clamp(1.3rem,3vw,1.75rem);line-height:1.2}
+.split>div>p{margin:0 0 14px;color:var(--mut)}
+.chk{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.chk li{position:relative;padding-left:30px}
+.chk li::before{content:"";position:absolute;left:0;top:2px;width:20px;height:20px;border-radius:50%;background:var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/13px no-repeat}
+.dm{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 14px 36px rgba(0,0,0,.1)}
+.dm>small{display:block;margin-bottom:12px;color:var(--mut);font-size:.78rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.dr{padding:12px 14px;margin-bottom:10px;border:1px solid var(--line);border-left-width:5px;border-radius:10px;background:var(--bg)}
+.dr:last-child{margin-bottom:0}
+.dr.ok{border-left-color:var(--ok)}.dr.warn{border-left-color:var(--warn)}.dr.bad{border-left-color:var(--bad)}
+.dr b{display:block;font-size:.93rem}
+.dr span{display:block;margin:2px 0 8px;font-size:.84rem;font-weight:600}
+.dr.ok span{color:var(--ok)}.dr.warn span{color:var(--warn)}.dr.bad span{color:var(--bad)}
+.bar{height:7px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;width:0;height:100%;border-radius:inherit;transition:width 1.4s cubic-bezier(.2,.7,.2,1) .35s}
+.dr.ok .bar i{background:var(--ok)}.dr.warn .bar i{background:var(--warn)}.dr.bad .bar i{background:var(--bad)}
+.dm.in .bar i{width:var(--w)}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.step{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px}
+.step:not(:last-child)::after{content:"";position:absolute;top:38px;right:-14px;width:14px;height:2px;background:var(--red);opacity:.5}
+.step .n{display:grid;place-items:center;width:36px;height:36px;margin-bottom:12px;border-radius:50%;background:var(--red);color:#fff;font-weight:700}
+.step h3{margin:0 0 6px;font-size:1.05rem}
+.step p{margin:0;color:var(--mut);font-size:.93rem}
+
+.cta2{margin-top:44px;padding:34px 24px;border-radius:20px;text-align:center;color:#fff;background:linear-gradient(135deg,#7f1913,#b3261e 60%,#d4483c);box-shadow:0 18px 44px rgba(179,38,30,.25)}
+.cta2 h2{margin:0 0 8px;font-size:clamp(1.3rem,3.2vw,1.8rem)}
+.cta2 p{margin:0 auto 20px;max-width:50ch;opacity:.93}
+.cta2 .btns{display:flex;justify-content:center;flex-wrap:wrap;gap:10px}
+
+@media(max-width:860px){
+  .hero{grid-template-columns:1fr;padding:30px 22px;gap:10px}
+  .hv{min-height:270px}
+  .fgrid{grid-template-columns:repeat(2,1fr)}
+  .split{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr}
+  .step:not(:last-child)::after{display:none}
+}
+@media(max-width:540px){
+  .fgrid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .fchip.o1{right:-4px}.fchip.o2{left:-4px}
+}
+@media(prefers-reduced-motion:reduce){
+  .rv{opacity:1}.rv.in{animation:none}
+  .hero::before,.hero .tag i,.scan .ln,.fchip,.pista .pi::after{animation:none!important}
+  .scan .ln{top:50%}
+  .bar i,.feat,.feat .ic,.bt{transition:none}
+}
 </style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -114,13 +266,19 @@ main.ancho{max-width:1100px}
 <footer><button id="cfgBtn" class="oculto" aria-label="Configuración" title="Configuración">·</button><span>Servicio por <a href="https://nexbrig.com" style="color:inherit">NEXBRIG</a></span></footer>
 <dialog id="dlg"></dialog>
 <dialog id="dx" aria-label="Datos del extintor"></dialog>
+<dialog id="dk" aria-label="Acceso con contraseña"></dialog>
+<dialog id="dp" aria-label="Vista previa del informe"></dialog>
 <script>
 /* Valores por defecto. Para cambiarlos NO hace falta editar este código:
    usa el botón oculto «·» del pie de página (pide contraseña) y genera un config.json. */
 const DEF = {usuario:"matiasvargas-pixel", repo:"2manue", rama:"main", carpeta:"data", fuente:"raw", logo:"https://nexbrig.com/img/novologo.jpeg"};
 const HASH = "ab9f273897be0befedd52dce825cd30810a22f61654d00581f59e20abadbe12b"; // SHA-256 de la contraseña
 
+const HASH_ACC = "158a323a7ba44870f23d96f1516dd70aa48e9a72db4ebb026b0a89e212a208ab"; // SHA-256 de la contraseña de acceso (2026)
+
 const $ = s => document.querySelector(s), app = $("#app");
+let ACC = false; // true cuando ya se ingresó la contraseña (se recuerda mientras la pestaña siga abierta)
+try{ ACC = sessionStorage.getItem("nb_acc") === "1"; }catch(e){}
 let CFG = {...DEF}, DB = null, EMP = {}, E = "";
 const base = (c = CFG) => c.fuente === "pages"
   ? `https://${c.usuario}.github.io/${c.repo}/${c.carpeta}/`
@@ -168,7 +326,8 @@ function vistaExtintor(e){
   const [cls, txt] = estado(e.vencimiento, e.horaVenc);
   const filas = filasExtintor(e);
   let h = `<div class="card"><h1>${esc(e.nombre || e.id)}</h1><div class="id">Código ${esc(e.id)}</div>
-    <div class="est ${cls}" id="est">${esc(txt)}</div></div>
+    <div class="est ${cls}" id="est">${esc(txt)}</div>
+    <button class="acc" id="acc" type="button">${ACC ? "Ver todos los extintores y planos" : "🔒 Acceso con contraseña"}</button></div>
     <div class="card"><dl>${filas.map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl></div>`;
   // El mapa es un archivo SVG de la carpeta de la empresa; se muestra como imagen (no ejecuta scripts).
   if(e.mapa && /^[\w\-./]+\.svg$/i.test(e.mapa) && !e.mapa.includes("..")){
@@ -177,9 +336,37 @@ function vistaExtintor(e){
       ${punto ? `<i class="dot" style="left:${+e.mapaX}%;top:${+e.mapaY}%"></i>` : ""}</div>
       ${punto ? '<p class="hint">El punto rojo indica dónde está el extintor.</p>' : ""}</div>`;
   }
-  return h + `<div class="card"><button class="pdf" onclick="generarPDF(this)">Descargar informe PDF de todos los extintores</button>
-    <a class="item" href="${enlace()}">Ver todos los extintores</a>
-    <a class="item" href="${enlacePlanos()}">Ver planos de la empresa</a></div>`;
+  return h;
+}
+
+/* ---------- Acceso con contraseña ---------- */
+const dk = $("#dk");
+const sha = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(x => x.toString(16).padStart(2, "0")).join("");
+const irALista = () => { dk.close(); navegar("lista"); };
+const accederTodo = () => ACC ? irALista() : pedirClave(irALista);
+
+function pedirClave(alEntrar){
+  dk.innerHTML = `<h2>Acceso restringido</h2><p class="hint">Ingresa la contraseña para ver todos los extintores, los planos y el informe.</p>
+    <label for="pk">Contraseña</label><input id="pk" type="password" autocomplete="off">
+    <p class="hint" id="mk" role="alert"></p>
+    <div class="acts"><button id="kn" type="button">Cancelar</button><button class="p" id="ko" type="button">Entrar</button></div>`;
+  dk.showModal(); $("#pk").focus();
+  $("#kn").onclick = () => dk.close();
+  const entrar = async () => {
+    if(!(window.crypto && crypto.subtle)) return $("#mk").textContent = "Abre la página con https para usar el acceso.";
+    if(await sha($("#pk").value) === HASH_ACC){
+      ACC = true; try{ sessionStorage.setItem("nb_acc", "1"); }catch(e){}
+      alEntrar();
+    }else{ $("#mk").textContent = "Contraseña incorrecta."; $("#pk").select(); }
+  };
+  $("#ko").onclick = entrar; $("#pk").onkeydown = ev => { if(ev.key === "Enter") entrar(); };
+}
+
+function vistaBloqueada(vista){ // lista y planos solo se ven con contraseña
+  app.className = "";
+  app.innerHTML = `<div class="card"><h1>Acceso restringido</h1><p class="hint">Esta sección es solo para personal autorizado.</p>
+    <button class="acc" id="bk" type="button">🔒 Ingresar contraseña</button></div>`;
+  $("#bk").onclick = () => pedirClave(() => { dk.close(); vista === "planos" ? vistaPlanos(DB) : vistaLista(DB); });
 }
 
 /* ---------- Planos: todos los mapas de la empresa con sus extintores ---------- */
@@ -279,7 +466,7 @@ function elegir(id){ // resalta el extintor en el plano y en la lista; con el se
 
 function navegar(vista, push = true){
   if(push) history.pushState(null, "", vista === "planos" ? enlacePlanos() : enlace());
-  const pintar = () => { document.body.style.overflow = ""; vista === "planos" ? vistaPlanos(DB) : vistaLista(DB); window.scrollTo(0, 0); };
+  const pintar = () => { document.body.style.overflow = ""; if(!ACC) vistaBloqueada(vista); else vista === "planos" ? vistaPlanos(DB) : vistaLista(DB); window.scrollTo(0, 0); };
   if(document.startViewTransition && !matchMedia("(prefers-reduced-motion:reduce)").matches) document.startViewTransition(pintar);
   else{ pintar(); app.animate([{opacity: 0, transform: "translateY(8px)"}, {opacity: 1, transform: "none"}], {duration: 250, easing: "ease-out"}); }
 }
@@ -291,6 +478,7 @@ window.addEventListener("popstate", () => { // botón Atrás / Adelante del nave
 
 // Un solo manejador para pestañas, zoom, filtros, lista y puntos
 app.addEventListener("click", ev => {
+  if(ev.target.closest("#acc")) return accederTodo();
   const nv = ev.target.closest(".nav a"); // Extintores / Planos sin recargar la página
   if(nv && DB && !ev.metaKey && !ev.ctrlKey && !ev.shiftKey && ev.button === 0){
     ev.preventDefault(); if(!nv.classList.contains("on")) navegar(nv.getAttribute("href").includes("vista=planos") ? "planos" : "lista"); return;
@@ -335,13 +523,19 @@ document.addEventListener("pointerup", () => { if(arr){ arr.zw.classList.remove(
 function vistaLista(db){
   app.className = "";
   app.innerHTML = navegacion("lista") + `<div class="card"><h2>Extintores registrados</h2>
-    <button class="pdf" onclick="generarPDF(this)">Descargar informe PDF</button>
+    <button class="pdf" onclick="generarPDF(this)">Ver / descargar informe PDF</button>
     <input id="q" type="search" placeholder="Buscar por código, nombre o ubicación"><div id="lista"></div></div>`;
   const pintar = () => {
     const q = $("#q").value.toLowerCase();
     const r = db.extintores.filter(e => (e.id + " " + e.nombre + " " + e.ubicacion).toLowerCase().includes(q));
-    $("#lista").innerHTML = r.map(e =>
-      `<a class="item" href="${enlace(e.id)}"><b>${esc(e.id)}</b> · ${esc(e.nombre)}<small>${esc(e.ubicacion)}</small></a>`).join("") || "<p>No hay resultados.</p>";
+    $("#lista").innerHTML = r.map(e => {
+      const [c, t] = estado(e.vencimiento, e.horaVenc);
+      const v = e.vencimiento ? fd(e.vencimiento) + (e.horaVenc ? ", " + fh(e.horaVenc) : "") : "";
+      return `<a class="exc ${c}" href="${enlace(e.id)}"><span class="t">${esc(e.id)} · ${esc(e.nombre || "")}</span>
+        ${e.ubicacion ? `<small>${esc(e.ubicacion)}</small>` : ""}
+        <div class="est ${c}">${esc(t)}</div>
+        ${v ? `<small class="ven">Vencimiento: ${esc(v)}</small>` : ""}</a>`;
+    }).join("") || "<p>No hay resultados.</p>";
   };
   $("#q").oninput = pintar; pintar();
 }
@@ -358,6 +552,56 @@ function logoData(urls){
     i.onerror = () => res(null); i.src = u;
   });
   return urls.filter(Boolean).reduce((p, u) => p.then(r => r || probar(u)), Promise.resolve(null));
+}
+
+/* ---------- Vista previa del informe (visor con zoom, descarga al final) ---------- */
+const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+const dp = $("#dp");
+const cargarScript = u => new Promise((ok, no) => { const x = document.createElement("script"); x.src = u; x.onload = ok; x.onerror = no; document.head.appendChild(x); });
+let pdfUrl = "";
+dp.addEventListener("close", () => { if(pdfUrl) URL.revokeObjectURL(pdfUrl); pdfUrl = ""; dp.innerHTML = ""; });
+
+async function vistaPrevia(doc, nombre){
+  const blob = doc.output("blob"); pdfUrl = URL.createObjectURL(blob);
+  const ZS = [1, 1.5, 2, 3]; let zi = 0, tok = 0, pdf = null;
+  dp.innerHTML = `<div class="vt"><strong>Vista previa del informe</strong>
+    <div class="zb" role="group" aria-label="Zoom"><button type="button" data-pz="-" aria-label="Alejar">−</button><output id="pzl" aria-live="polite">100%</output><button type="button" data-pz="+" aria-label="Acercar">+</button></div>
+    <div class="vacts"><button class="p" id="pdes" type="button">Descargar PDF</button><button id="pcer" type="button">Cerrar</button></div></div>
+    <div class="vb" id="vb"><p>Preparando vista previa…</p></div>`;
+  $("#pcer").onclick = () => dp.close();
+  $("#pdes").onclick = () => doc.save(nombre);
+  dp.showModal();
+  const vb = $("#vb");
+
+  const pintar = async () => {
+    const mi = ++tok, z = ZS[zi];
+    $("#pzl").textContent = Math.round(z * 100) + "%";
+    dp.querySelector('[data-pz="-"]').disabled = zi === 0; dp.querySelector('[data-pz="+"]').disabled = zi === ZS.length - 1;
+    const cont = document.createElement("div"); cont.className = "hojas"; cont.style.width = z * 100 + "%";
+    const ancho = Math.max(vb.clientWidth - 24, 200) * z, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    for(let i = 1; i <= pdf.numPages; i++){
+      const pg = await pdf.getPage(i); if(mi !== tok) return;
+      const v0 = pg.getViewport({scale: 1}), v = pg.getViewport({scale: Math.min(ancho * dpr, 2400) / v0.width});
+      const cv = document.createElement("canvas"); cv.width = v.width; cv.height = v.height;
+      await pg.render({canvasContext: cv.getContext("2d"), viewport: v}).promise; if(mi !== tok) return;
+      cont.appendChild(cv);
+      if(i === 1){ vb.replaceChildren(cont); }
+    }
+  };
+  dp.onclick = ev => {
+    const b = ev.target.closest("[data-pz]"); if(!b || !pdf) return;
+    zi = Math.max(0, Math.min(ZS.length - 1, zi + (b.dataset.pz === "+" ? 1 : -1))); pintar().catch(() => {});
+  };
+
+  try{
+    if(!window.pdfjsLib) await cargarScript(PDFJS + "pdf.min.js");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + "pdf.worker.min.js";
+    pdf = await pdfjsLib.getDocument({data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false}).promise;
+    await pintar();
+  }catch(err){ // sin el visor: se muestra el PDF con el visor del navegador
+    dp.querySelector(".zb").style.display = "none";
+    vb.innerHTML = `<iframe src="${pdfUrl}" title="Informe PDF"></iframe>`;
+  }
 }
 
 async function generarPDF(btn){
@@ -408,7 +652,7 @@ async function generarPDF(btn){
       doc.text("Servicio por NEXBRIG · nexbrig.com", 14, H - 8);
       doc.text("Página " + i + " de " + pags, W - 14, H - 8, {align: "right"});
     }
-    doc.save("Informe-extintores-" + E + "-" + now.getFullYear() + "-" + p(now.getMonth() + 1) + "-" + p(now.getDate()) + ".pdf");
+    await vistaPrevia(doc, "Informe-extintores-" + E + "-" + now.getFullYear() + "-" + p(now.getMonth() + 1) + "-" + p(now.getDate()) + ".pdf");
   }catch(err){
     alert("No se pudo generar el PDF.");
   }finally{
@@ -418,7 +662,6 @@ async function generarPDF(btn){
 
 /* ---------- Panel de configuración oculto (con contraseña) ---------- */
 const dlg = $("#dlg");
-const sha = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(x => x.toString(16).padStart(2, "0")).join("");
 
 function abrirPanel(){
   dlg.innerHTML = `<h2>Acceso</h2><label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="off">
@@ -462,6 +705,124 @@ $("#cfgBtn").onclick = () => {
   tToques = setTimeout(() => toques = 0, 3000);
 };
 
+/* ---------- Portada: información del producto (pantalla sin código QR) ---------- */
+const ic = p => `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const ICO = {
+  qr: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h3M20 17v4"/>',
+  reloj: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  campana: '<path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 003.4 0"/>',
+  mapa: '<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
+  pdf: '<path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+  candado: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>',
+  flecha: '<path d="M12 5v14M6 13l6 6 6-6"/>'
+};
+
+function qrSvg(){ // QR decorativo (no es un código real), generado con una semilla fija
+  const N = 25, fin = [[0, 0], [N - 7, 0], [0, N - 7]]; let s = 11, d = "";
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for(let y = 0; y < N; y++) for(let x = 0; x < N; x++){
+    let on, z = false;
+    for(const [ox, oy] of fin){
+      const a = x - ox, b = y - oy;
+      if(a >= -1 && a <= 7 && b >= -1 && b <= 7){
+        z = true; on = a >= 0 && a <= 6 && b >= 0 && b <= 6 && (a === 0 || a === 6 || b === 0 || b === 6 || (a >= 2 && a <= 4 && b >= 2 && b <= 4));
+      }
+    }
+    if(!z) on = rnd() > .5;
+    if(on) d += `M${x} ${y}h1v1h-1z`;
+  }
+  return `<svg viewBox="0 0 ${N} ${N}" shape-rendering="crispEdges" aria-hidden="true"><path d="${d}" fill="#1d1a19"/></svg>`;
+}
+
+function vistaInicio(){
+  const FUN = [
+    ["qr", "Un código QR por extintor", "Cada equipo tiene su propio QR. Basta escanearlo con el celular para ver su ficha completa: tipo, capacidad, ubicación y responsable."],
+    ["reloj", "Estado en tiempo real", "Un semáforo automático indica si el extintor está vigente, por vencer o vencido, calculado con la fecha y hora de tu dispositivo."],
+    ["campana", "Control de vencimientos", "Cuenta regresiva en días y horas. Los equipos por vencer (30 días o menos) y los vencidos se destacan para actuar a tiempo."],
+    ["mapa", "Planos interactivos", "Ubica todos tus extintores sobre los planos de tus instalaciones, con zoom, pantalla completa y filtros por estado."],
+    ["pdf", "Informe PDF profesional", "Genera con un clic un informe con el logo de tu empresa, el resumen de estados y el detalle de cada extintor."],
+    ["candado", "Acceso protegido", "La ficha del extintor se consulta con el QR; el listado completo, los planos y el informe requieren contraseña."]
+  ];
+  const PASOS = [
+    ["Registramos tus extintores", "Cargamos los datos de cada equipo: tipo, capacidad, ubicación, fechas de recarga y vencimiento."],
+    ["Colocamos un QR en cada uno", "Cada extintor queda identificado con un código único, listo para escanear en cualquier momento."],
+    ["Escaneas y consultas al instante", "Desde cualquier celular, sin instalar aplicaciones, ves el estado y los datos actualizados."]
+  ];
+  const DEMO = [
+    ["ok", "EXT-001 · Pasillo principal", "Vigente · faltan 214 d", "78%"],
+    ["warn", "EXT-014 · Almacén", "Por vencer · faltan 12 d", "16%"],
+    ["bad", "EXT-023 · Taller", "Vencido hace 3 d", "4%"]
+  ];
+  const d = n => ` style="--d:${n}s"`;
+  app.className = "inicio";
+  app.innerHTML = `
+  <section class="hero" aria-labelledby="ht">
+    <div>
+      <span class="tag rv"${d(0)}><i></i>Gestión digital de extintores</span>
+      <h1 id="ht" class="rv"${d(.08)}>Seguridad contra incendios, <em>siempre bajo control</em></h1>
+      <p class="rv"${d(.16)}>Un código QR en cada extintor para consultar su estado, vencimiento y ubicación al instante, desde cualquier celular.</p>
+      <div class="btns rv"${d(.24)}>
+        <a class="bt w" href="#funciones">Conocer funciones ${ic(ICO.flecha)}</a>
+        <a class="bt g" href="https://nexbrig.com" target="_blank" rel="noopener">Visitar NEXBRIG</a>
+      </div>
+    </div>
+    <div class="hv rv"${d(.2)} aria-hidden="true">
+      <div class="scan">${qrSvg()}<span class="c a"></span><span class="c b"></span><span class="c c2"></span><span class="c d"></span><span class="ln"></span></div>
+      <div class="fchip o1"><i></i>Vigente</div>
+      <div class="fchip o2"><i></i>Por vencer en 12 d</div>
+    </div>
+  </section>
+
+  <div class="card pista rv"${d(.1)}>
+    <span class="pi">${ic(ICO.qr)}</span>
+    <p>Escanea el código QR de un extintor para ver su información.</p>
+  </div>
+
+  <div class="stats rv"${d(.05)}>
+    <div class="stat"><b>1 QR</b><span>por cada extintor</span></div>
+    <div class="stat"><b>0 apps</b><span>por instalar</span></div>
+    <div class="stat"><b>24/7</b><span>consulta disponible</span></div>
+    <div class="stat"><b>3</b><span>estados con semáforo</span></div>
+  </div>
+
+  <section id="funciones" aria-labelledby="ft">
+    <div class="sec-h rv"><small>Funciones</small><h2 id="ft">Todo lo que necesitas para controlar tus extintores</h2><p>Información clara, actualizada y al alcance de tu equipo.</p></div>
+    <div class="fgrid">${FUN.map((f, i) => `<article class="feat rv"${d((i % 3) * .1)}><div class="ic">${ic(ICO[f[0]])}</div><h3>${f[1]}</h3><p>${f[2]}</p></article>`).join("")}</div>
+  </section>
+
+  <section class="split" aria-label="Estados de un vistazo">
+    <div class="rv">
+      <h2>Sabrás el estado de cada extintor de un vistazo</h2>
+      <p>Colores claros y datos precisos para que el personal responsable priorice lo que importa.</p>
+      <ul class="chk">
+        <li>Verde, ámbar y rojo según la vigencia de cada equipo.</li>
+        <li>Cualquier persona con un celular puede consultar la ficha.</li>
+        <li>Tu logo y el nombre de tu empresa en cada pantalla.</li>
+      </ul>
+    </div>
+    <div class="dm rv"${d(.12)} role="img" aria-label="Ejemplo ilustrativo de tres extintores con estados vigente, por vencer y vencido">
+      <small>Ejemplo ilustrativo</small>
+      ${DEMO.map(r => `<div class="dr ${r[0]}"><b>${r[1]}</b><span>${r[2]}</span><div class="bar"><i style="--w:${r[3]}"></i></div></div>`).join("")}
+    </div>
+  </section>
+
+  <section aria-labelledby="ct">
+    <div class="sec-h rv"><small>Cómo funciona</small><h2 id="ct">Tres pasos para tener todo en orden</h2></div>
+    <div class="steps">${PASOS.map((p, i) => `<article class="step rv"${d(i * .12)}><div class="n">${i + 1}</div><h3>${p[0]}</h3><p>${p[1]}</p></article>`).join("")}</div>
+  </section>
+
+  <section class="cta2 rv" aria-labelledby="cta">
+    <h2 id="cta">Digitaliza el control de tus extintores</h2>
+    <p>Descubre cómo NEXBRIG puede ayudarte a mantener tus equipos vigentes y a tu personal informado.</p>
+    <div class="btns"><a class="bt w" href="https://nexbrig.com" target="_blank" rel="noopener">Conocer más en nexbrig.com</a></div>
+  </section>`;
+  const rv = app.querySelectorAll(".rv");
+  if("IntersectionObserver" in window){
+    const io = new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } }), {threshold: .12, rootMargin: "0px 0px -5% 0px"});
+    rv.forEach(el => io.observe(el));
+  }else rv.forEach(el => el.classList.add("in"));
+}
+
 /* ---------- Arranque ---------- */
 const noEnc = (t, m) => app.innerHTML = `<div class="card"><h1>${esc(t)}</h1><p>${m || ""}</p></div>`;
 (async () => {
@@ -469,19 +830,24 @@ const noEnc = (t, m) => app.innerHTML = `<div class="card"><h1>${esc(t)}</h1><p>
   try{ Object.assign(CFG, JSON.parse(localStorage.getItem("nb_cfg") || "{}")); }catch(e){} // prueba local
   $("#logo").src = CFG.logo;
   const q = new URLSearchParams(location.search); E = q.get("e") || ""; const id = q.get("id");
-  if(!E) return noEnc("Control de extintores", "Escanea el código QR de un extintor para ver su información.");
+  if(!E) return vistaInicio();
   if(!/^[a-z0-9-]{3,60}$/i.test(E)) return noEnc("Empresa no encontrada");
   try{
     const [emp, db] = await Promise.all([getJson(ruta("empresa.json")).catch(() => ({})), getJson(ruta("extintores.json"))]);
     EMP = emp; DB = db;
     if(emp.logo) $("#logo").src = emp.logo;
     if(emp.nombre){ $("#hn").textContent = emp.nombre; document.title = emp.nombre + " · Extintores"; }
-    if(!id) return q.get("vista") === "planos" ? vistaPlanos(db) : vistaLista(db);
+    if(!id){
+      const v = q.get("vista") === "planos" ? "planos" : "lista";
+      if(!ACC) return vistaBloqueada(v);
+      return v === "planos" ? vistaPlanos(db) : vistaLista(db);
+    }
     const e = (db.extintores || []).find(x => x.id === id);
     if(!e) return noEnc("Extintor no encontrado", `El código <b>${esc(id)}</b> no existe. <a href="${enlace()}">Ver todos</a>`);
     app.innerHTML = vistaExtintor(e);
     setInterval(() => { // reevalúa el estado con el reloj del dispositivo
       const [c, t] = estado(e.vencimiento, e.horaVenc), el = $("#est");
+      if(!el) return;
       el.className = "est " + c; el.textContent = t;
     }, 30000);
   }catch(err){
