@@ -630,10 +630,62 @@ function logoData(urls){
     return (await dibujar(u + (u.includes("?") ? "&" : "?") + "_nb=" + Date.now())) || dibujar(u);
   };
   const lista = [...new Set(urls.filter(Boolean).map(u => dura(u) ? u : new URL(u, location.href).href))];
-  // 0) Primero, el logo que ya está cargado en la parte superior de la página
-  const cab = document.getElementById("logo");
-  const yaCargado = cab && cab.complete && cab.naturalWidth ? aPng(cab) : null;
-  return lista.reduce((p, u) => p.then(r => r || probar(u)), Promise.resolve(yaCargado));
+
+  /* ---- Caché en el navegador (localStorage) ----
+     Cuando el logo se consigue una vez, se guarda ya convertido a imagen. Así los siguientes PDF lo usan
+     directamente, sin red, y siguen funcionando aunque el servidor del logo falle o no haya internet.
+     Se guardan como máximo 4 logos (los más recientes) y cada uno se considera «fresco» durante 7 días:
+     pasado ese tiempo se intenta renovar, y si no se logra se usa la copia guardada igualmente. */
+  const KEY = "nb_logos", TTL = 7 * 864e5, MAX_CHARS = 600000;
+  const leer = () => { try{ const o = JSON.parse(localStorage.getItem(KEY) || "{}"); return o && typeof o === "object" ? o : {}; }catch(e){ return {}; } };
+  const delCache = (u, soloFresco) => {
+    const c = leer()[u];
+    if(!c || !c.d || (soloFresco && Date.now() - c.t > TTL)) return null;
+    return {url: c.d, w: c.w, h: c.h, f: c.f || "PNG"};
+  };
+  // Si el logo es muy pesado para localStorage, se reduce a JPEG (máx. 700 px)
+  const reducir = g => new Promise(res => {
+    const i = new Image(); i.onerror = () => res(null);
+    i.onload = () => { try{
+      const k = Math.min(1, 700 / Math.max(i.naturalWidth || 700, i.naturalHeight || 700));
+      const c = document.createElement("canvas"); c.width = Math.round((i.naturalWidth || 700) * k); c.height = Math.round((i.naturalHeight || 700) * k);
+      const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(i, 0, 0, c.width, c.height);
+      const d = c.toDataURL("image/jpeg", .85);
+      res(d.length < MAX_CHARS ? {url: d, w: c.width, h: c.height, f: "JPEG"} : null);
+    }catch(e){ res(null); } };
+    i.src = g.url;
+  });
+  const guardar = async (u, g) => {
+    try{
+      let r = g; if(g.url.length > MAX_CHARS){ r = await reducir(g); if(!r) return; }
+      const mapa = leer(); mapa[u] = {d: r.url, w: r.w, h: r.h, f: r.f || "PNG", t: Date.now()};
+      Object.keys(mapa).sort((a, b) => (mapa[b].t || 0) - (mapa[a].t || 0)).slice(4).forEach(k => delete mapa[k]);
+      localStorage.setItem(KEY, JSON.stringify(mapa));
+    }catch(e){} // sin espacio o con el almacenamiento bloqueado: se sigue sin caché
+  };
+
+  /* Último recurso: wsrv.nl, un servicio gratuito que sí permite leer imágenes de cualquier sitio público
+     y las devuelve como PNG (sirve para logos PNG y JPEG). No se usa con data:/blob: ni con direcciones locales. */
+  const viaWsrv = u => /^https?:\/\//i.test(u) && !/^https?:\/\/(localhost|127\.|10\.|192\.168\.|\[::1\])/i.test(u)
+    ? probar("https://wsrv.nl/?url=" + encodeURIComponent(u) + "&output=png&w=1000&we")
+    : null;
+
+  return (async () => {
+    // 0) El logo que ya está cargado en la parte superior de la página (solo se puede leer si el servidor lo permite)
+    const cab = document.getElementById("logo");
+    const yaCargado = cab && cab.complete && cab.naturalWidth ? aPng(cab) : null;
+    if(yaCargado){ if(cab.src && !delCache(cab.src, true)) guardar(cab.src, yaCargado); return yaCargado; }
+    // Para cada dirección, en orden de prioridad: copia guardada → intentos normales → wsrv.nl
+    for(const u of lista){
+      const c = delCache(u, true); if(c) return c;
+      let g = await probar(u);
+      if(!g) g = await viaWsrv(u);
+      if(g){ guardar(u, g); return g; }
+    }
+    // Nada funcionó: se usa una copia guardada aunque ya haya pasado su tiempo
+    for(const u of lista){ const c = delCache(u, false); if(c) return c; }
+    return null;
+  })();
 }
 
 /* ---------- Vista previa del informe (visor con zoom, descarga al final) ---------- */
@@ -696,8 +748,21 @@ async function generarPDF(btn){
     const hora = fh(p(now.getHours()) + ":" + p(now.getMinutes()));
     const absoluta = u => /^(https?:|data:|blob:)/i.test(u || "");
     const lg = await logoData([EMP.logo, EMP.logo && !absoluta(EMP.logo) ? ruta(EMP.logo) : "", CFG.logo, DEF.logo]);
-    if(lg){ let h = 20, w = h * lg.w / lg.h; if(w > 60){ w = 60; h = w * lg.h / lg.w; } doc.addImage(lg.url, "PNG", 14, 10, w, h, undefined, "FAST"); }
-    else console.warn("No se pudo leer el logo para el PDF (¿el servidor del logo no permite CORS?).");
+    let conLogo = false;
+    if(lg){
+      try{
+        let h = 20, w = h * lg.w / lg.h; if(w > 60){ w = 60; h = w * lg.h / lg.w; }
+        doc.addImage(lg.url, lg.f || "PNG", 14, 10, w, h, undefined, "FAST"); conLogo = true;
+      }catch(e){ console.warn("El logo se obtuvo pero no se pudo insertar en el PDF.", e); }
+    }
+    if(!conLogo){ // Plan B: si no hay logo, el PDF muestra el nombre de la empresa en texto (arriba a la izquierda)
+      console.warn("No se pudo obtener el logo para el PDF; se usa el nombre de la empresa en texto.");
+      const nom = String(EMP.nombre || E || "").trim();
+      if(nom){
+        doc.setTextColor(29, 26, 25); doc.setFont("helvetica", "bold"); doc.setFontSize(16);
+        doc.text(doc.splitTextToSize(nom, 110).slice(0, 2), 14, 18); // máximo 2 líneas, sin chocar con el título de la derecha
+      }
+    }
     doc.setTextColor(29, 26, 25); doc.setFont("helvetica", "bold"); doc.setFontSize(18);
     doc.text("Informe de estado de extintores", W - 14, 17, {align: "right"});
     doc.setFontSize(12); doc.text(EMP.nombre || "", W - 14, 24, {align: "right"});
