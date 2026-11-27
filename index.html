@@ -48,9 +48,10 @@ dialog label{display:block;font-weight:600;margin:8px 0 3px}
 /* Botón de acceso con contraseña (ficha del extintor): solo candado, esquina superior derecha de la tarjeta */
 .card.fx{position:relative}
 .card.fx h1{padding-right:44px}
-.acc{position:absolute;top:10px;right:10px;display:flex;align-items:center;justify-content:center;width:36px;height:36px;margin:0;padding:0;border:1px solid var(--red);border-radius:8px;background:none;color:var(--red);opacity:.55;cursor:pointer;transition:none;animation:none}
+.acc{position:absolute;top:10px;right:10px;display:flex;align-items:center;justify-content:center;width:36px;height:36px;margin:0;padding:0;border:1px solid #000;border-radius:8px;background:none;color:#000;opacity:.55;cursor:pointer;transition:none;animation:none}
 .acc svg{display:block}
-.acc:hover{opacity:.55;background:none;color:var(--red)}
+.acc:hover{opacity:.55;background:none;color:#000}
+@media(prefers-color-scheme:dark){.acc{border-color:var(--ink);color:var(--ink)}.acc:hover{color:var(--ink)}}
 .acc:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 /* Vista bloqueada: solo el candado, centrado en la tarjeta */
 .card.bq{display:flex;justify-content:center;padding:28px 16px}
@@ -346,7 +347,7 @@ function filasExtintor(e){
 function vistaExtintor(e){
   const [cls, txt] = estado(e.vencimiento, e.horaVenc);
   const filas = filasExtintor(e);
-  let h = `<div class="card fx"><button class="acc" id="acc" type="button" aria-label="${ACC ? "Ver todos los extintores y planos" : "Acceso con contraseña"}" title="${ACC ? "Ver todos los extintores y planos" : "Acceso con contraseña"}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></button>
+  let h = `<div class="card fx"><button class="acc" id="acc" type="button" aria-label="${ACC ? "Ver todos los extintores y planos" : "Acceso con contraseña"}" title="${ACC ? "Ver todos los extintores y planos" : "Acceso con contraseña"}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ACC ? '<path d="M12 5v14M5 12h14"/>' : '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>'}</svg></button>
     <h1>${esc(e.nombre || e.id)}</h1><div class="id">Código ${esc(e.id)}</div>
     <div class="est ${cls}" id="est">${esc(txt)}</div></div>
     <div class="card"><dl>${filas.map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl></div>`;
@@ -387,7 +388,7 @@ function pedirClave(alEntrar){
 
 function vistaBloqueada(vista){ // lista y planos solo se ven con contraseña
   app.className = "";
-  app.innerHTML = `<div class="card bq"><button class="acc" id="bk" type="button" aria-label="Ingresar contraseña" title="Ingresar contraseña"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></button></div>`;
+  app.innerHTML = `<div class="card bq"><button class="acc" id="bk" type="button" aria-label="Ingresar contraseña" title="Ingresar contraseña"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></button></div>`;
   $("#bk").onclick = () => pedirClave(() => { dk.close(); vista === "planos" ? vistaPlanos(DB) : vistaLista(DB); });
 }
 
